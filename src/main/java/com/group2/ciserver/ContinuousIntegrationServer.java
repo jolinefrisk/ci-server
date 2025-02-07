@@ -3,12 +3,14 @@ package com.group2.ciserver;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.ServletException;
- 
+
+import java.io.BufferedReader;
 import java.io.IOException;
  
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
+import org.json.JSONObject;
 
 /** 
  Skeleton of a ContinuousIntegrationServer which acts as webhook
@@ -16,6 +18,22 @@ import org.eclipse.jetty.server.handler.AbstractHandler;
 */
 public class ContinuousIntegrationServer extends AbstractHandler
 {
+
+    public static JSONObject getPayload(BufferedReader reader) {
+        StringBuilder jsonData = new StringBuilder();
+        String line;
+
+        try {
+            while ((line = reader.readLine()) != null) {
+                jsonData.append(line);
+            }
+            JSONObject json = new JSONObject(jsonData.toString());
+            return json;
+            
+        } catch (IOException | org.json.JSONException e) {
+            return new JSONObject(); 
+        }
+    }   
     public void handle(String target,
                        Request baseRequest,
                        HttpServletRequest request,
