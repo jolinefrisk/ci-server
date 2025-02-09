@@ -5,21 +5,31 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.BufferedReader;
 import java.io.StringReader;
+import java.io.File;
 
 import org.json.JSONObject;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.*;
+
+import org.eclipse.jgit.api.CloneCommand;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 
 /**
  * Unit test for simple App.
  */
-public class AppTest 
-{
+public class AppTest {
     /**
      * Rigorous Test :-)
      */
     @Test
-    public void shouldAnswerWithTrue()
-    {
-        assertTrue( true );
+    public void shouldAnswerWithTrue() {
+        assertTrue(true);
     }
 
     @Test
@@ -46,4 +56,41 @@ public class AppTest
         JSONObject json = ContinuousIntegrationServer.getPayload(reader);
         assertEquals("{}", json.toString());
     }
+
+    @Test
+    public void dirExistTestCloneRepo() {
+        File testDir = mock(File.class);
+        when(testDir.exists()).thenReturn(true);
+        assertFalse(ContinuousIntegrationServer.cloneRepo("https://github.com/test/repo.git", testDir));
+    }
+
+    @Test
+    public void trueTestCloneRepo() throws GitAPIException {
+        File testDir = mock(File.class);
+        when(testDir.exists()).thenReturn(false);
+
+        // asked ChatGPT how to test a positive case without actually cloning a real
+        // repo
+        try (MockedStatic<Git> mockedGit = Mockito.mockStatic(Git.class)) {
+            CloneCommand mockCloneCommand = mock(CloneCommand.class);
+            when(mockCloneCommand.setURI(anyString())).thenReturn(mockCloneCommand);
+            when(mockCloneCommand.setDirectory(any(File.class))).thenReturn(mockCloneCommand);
+            when(mockCloneCommand.call()).thenReturn(mock(Git.class));
+
+            mockedGit.when(Git::cloneRepository).thenReturn(mockCloneCommand);
+
+            boolean result = ContinuousIntegrationServer.cloneRepo("https://github.com/test/repo.git", testDir);
+
+            mockedGit.verify(Git::cloneRepository);
+            assertTrue(result);
+        }
+
+    }
+
+    @Test
+    public void falseTestCloneRepo() {
+        File testDir = new File("Fake\\path");
+        assertFalse(ContinuousIntegrationServer.cloneRepo("hello", testDir));
+    }
+
 }
