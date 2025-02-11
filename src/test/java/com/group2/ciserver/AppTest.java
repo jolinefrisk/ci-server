@@ -4,8 +4,11 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.StringReader;
 import java.io.File;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 
 import org.json.JSONObject;
 
@@ -91,6 +94,44 @@ public class AppTest {
     public void falseTestCloneRepo() {
         File testDir = new File("Fake\\path");
         assertFalse(ContinuousIntegrationServer.cloneRepo("hello", testDir));
+    }
+
+    @Test
+    public void positiveTestCompile() throws Exception {
+        File testDir = mock(File.class);
+        ProcessBuilder processBuilder = mock(ProcessBuilder.class);
+        Process process = mock(Process.class);
+
+        when(processBuilder.start()).thenReturn(process);
+
+        String message = "BUILD SUCCESS";
+        InputStream inStream = new ByteArrayInputStream(message.getBytes());
+        when(process.getInputStream()).thenReturn(inStream);
+
+        assertTrue(ContinuousIntegrationServer.compileCode(testDir, processBuilder, true));
+    }
+
+    @Test
+    public void negativeTestCompile() throws Exception {
+        File testDir = mock(File.class);
+        ProcessBuilder processBuilder = mock(ProcessBuilder.class);
+        Process process = mock(Process.class);
+
+        when(processBuilder.start()).thenReturn(process);
+
+        String message = "Hey now, you're an all star\r\n" + //
+                "Get your game on, go play";
+        InputStream inStream = new ByteArrayInputStream(message.getBytes());
+        when(process.getInputStream()).thenReturn(inStream);
+
+        assertFalse(ContinuousIntegrationServer.compileCode(testDir, processBuilder, true));
+    }
+
+    @Test
+    public void invalidTestCompile() {
+        File testDir = new File("jkhdfg");
+        ProcessBuilder processBuilder = new ProcessBuilder();
+        assertFalse(ContinuousIntegrationServer.compileCode(testDir, processBuilder, true));
     }
 
 }

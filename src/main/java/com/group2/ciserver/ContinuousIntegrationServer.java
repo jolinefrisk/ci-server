@@ -6,6 +6,7 @@ import javax.servlet.ServletException;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.Request;
@@ -50,7 +51,36 @@ public class ContinuousIntegrationServer extends AbstractHandler {
             Git.cloneRepository().setURI(url).setDirectory(directory).call();
             return true;
         } catch (GitAPIException e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage());
+            return false;
+        }
+    }
+
+    public static boolean compileCode(File directory, ProcessBuilder processBuilder, Boolean bash) {
+
+        try {
+            processBuilder.directory(directory);
+            if (bash) {
+                processBuilder.command("bash", "-c", "mvn clean compile");
+            } else {
+                processBuilder.command("cmd.exe", "/c", "mvn clean compile");
+            }
+
+            Process process = processBuilder.start();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+
+            String line;
+            Boolean compiled = false;
+
+            while ((line = reader.readLine()) != null) {
+                System.out.println(line);
+                if (line.contains("BUILD SUCCESS")) {
+                    compiled = true;
+                }
+            }
+            return compiled;
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
             return false;
         }
     }
@@ -80,6 +110,14 @@ public class ContinuousIntegrationServer extends AbstractHandler {
                         dir);
                 if (cloned) {
                     // compile the code
+                    response.getWriter().println("compiling the code");
+                    ProcessBuilder processBuilder = new ProcessBuilder();
+                    Boolean compiled = compileCode(dir, processBuilder, false);
+                    if (compiled) {
+                        response.getWriter().println("compiled!");
+                    } else {
+                        response.getWriter().println("not compiled!");
+                    }
                     // test the code
                     // notify the status
                 } else {
