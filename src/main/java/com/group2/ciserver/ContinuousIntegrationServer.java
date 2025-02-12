@@ -86,6 +86,33 @@ public class ContinuousIntegrationServer extends AbstractHandler {
         }
     }
 
+    public static boolean pullBranch(File directory, ProcessBuilder processBuilder, String branchP){
+        try{
+            
+            Git git = Git.open(directory);
+            String branch = git.getRepository().getBranch();
+
+            if (!branch.equals(branchP)){
+                try {
+                    git.checkout().setName(branchP).call();
+                } catch (Exception e) {
+                    git.checkout().setCreateBranch(true).setName(branchP).setStartPoint("origin/" + branchP).call();
+                }
+            }
+
+            git.pull().call();
+ 
+            return compileCode(directory, processBuilder, false);
+        }catch (MergeConflictException e){
+            System.out.println("merge conflict during pull: "+ e.getMessage());
+            return false;
+        }catch (IOException | GitAPIException e){
+            System.out.println("Error during pull: " + e.getMessage());
+            return false;
+        }
+    }
+
+
     public void handle(String target,
             Request baseRequest,
             HttpServletRequest request,
@@ -129,26 +156,19 @@ public class ContinuousIntegrationServer extends AbstractHandler {
                     // test the code
                     // notify the status
                 } else {
-                    try {
+                   
                     // pull the code from the branch that the code was pushed to
-                        response.getWriter().println("Clone exists, trying pull");
-                        Git git = Git.open(dir);
-                        git.pull().call();
-                        //compile code 
-                        boolean compiled = compileCode(dir, processBuilder, false);
-                        if (compiled) {
-                            response.getWriter().println("compiled!");
-                        } else {
-                            response.getWriter().println("not compiled!");
-                        }    
-                    }catch (MergeConflictException e){
-                        response.getWriter().println("merge conflict during pull: "+ e.getMessage());
-                    }catch (IOException | GitAPIException e){
-                        response.getWriter().println("Error during pull: " + e.getMessage());
-
-                    }
-                     // test the code
+                    response.getWriter().println("Clone exists, trying pull");
+                    String branchName = json.getJSONObject("pull_request").getJSONObject("head").getString("ref");
+                 
+                    Boolean compiled = pullBranch(dir, processBuilder, branchName);
+                        // test the code
                     // notify the status
+                    if (compiled) {
+                        response.getWriter().println("compiled!");
+                    } else {
+                        response.getWriter().println("not compiled!");
+                    }
                 }
             }
         }
