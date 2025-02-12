@@ -7,6 +7,10 @@ import javax.servlet.ServletException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+
 
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.Request;
@@ -83,6 +87,50 @@ public class ContinuousIntegrationServer extends AbstractHandler {
             System.out.println(e.getMessage());
             return false;
         }
+    }
+
+    public static boolean setCommitStatus(String repoOwner, String repoName, String commitSHA, String state, String description, String accessToken) {
+        boolean commitStatusSet = false;
+        try {
+            String url = "https://api.github.com/repos/" + repoOwner + "/" + repoName + "/statuses/" + commitSHA;
+            URL obj = new URL(url);
+            HttpURLConnection httpUrlConnection = (HttpURLConnection) obj.openConnection();
+
+            httpUrlConnection.setRequestMethod("POST");
+            httpUrlConnection.setRequestProperty("Authorization", "Bearer " + accessToken);
+            httpUrlConnection.setRequestProperty("Accept", "application/vnd.github.v3+json");
+            httpUrlConnection.setRequestProperty("Content-Type", "application/json");
+            httpUrlConnection.setDoOutput(true);
+
+            JSONObject json = new JSONObject();
+            // validate State values
+            // Throw something otherwise maybs
+            json.put("state", state);
+            if (!description.isBlank())
+            {
+                json.put("description", description);                
+            }
+            json.put("context", "ci-server");
+            
+            // oklart om vi ska ha den
+            // json.put("target_url", "http://ci-server.example.com/build/logs");
+
+            OutputStream outputStream = httpUrlConnection.getOutputStream();
+            outputStream.write(json.toString().getBytes());
+            outputStream.flush();
+            outputStream.close();
+
+            int responseCode = httpUrlConnection.getResponseCode();
+
+            if (responseCode == 201)
+            {
+                commitStatusSet = true;
+            }
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+
+        return commitStatusSet;
     }
 
     public void handle(String target,

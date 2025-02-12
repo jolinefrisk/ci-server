@@ -134,4 +134,44 @@ public class AppTest {
         assertFalse(ContinuousIntegrationServer.compileCode(testDir, processBuilder, true));
     }
 
+    @Test
+    public void successCommitStatusNotification() {   
+        String owner = "to be changed";
+        String repo = "to be changed";
+        String status = "success";
+        String commitSHA = "to be changed";
+        String desc = "Everything is fine";
+        String accessToken = "toBeChanged";
+        
+        boolean response = ContinuousIntegrationServer.setCommitStatus(owner, repo, commitSHA, status, desc, accessToken);
+        assertTrue(response);
+
+    }
+
+    @Test
+    public void failureCommitStatusNotification() {   
+        String owner = "to be changed";
+        String repo = "to be changed";
+        String status = "failure";
+        String commitSHA = "to be changed";
+        String desc = "Everything is not fine";
+        String accessToken = "toBeChanged";
+        
+        boolean response = ContinuousIntegrationServer.setCommitStatus(owner, repo, commitSHA, status, desc, accessToken);
+        assertFalse(response);
+    }
+
+    @Test
+    public void failureCommitStatusNotificationWrongRepoParameters() {   
+        String owner = "shaquile";
+        String repo = "oneil";
+        String status = "true";
+        String commitSHA = "to be changed";
+        String desc = "Shaq does not have a repo";
+        String accessToken = "toBeChanged";
+        
+        boolean response = ContinuousIntegrationServer.setCommitStatus(owner, repo, commitSHA, status, desc, accessToken);
+        assertFalse(response);
+    }
+
 }
