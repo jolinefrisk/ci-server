@@ -13,11 +13,12 @@ import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 
 import org.json.JSONObject;
-
+import org.openl.rules.repository.git.MergeConflictException;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 
 import java.io.File;
+
 
 /**
  * Skeleton of a ContinuousIntegrationServer which acts as webhook
@@ -104,16 +105,21 @@ public class ContinuousIntegrationServer extends AbstractHandler {
         BufferedReader reader = request.getReader();
         JSONObject json = getPayload(reader);
 
- 
-        if (json.has("pull_request")) {
-            JSONObject pullRequest = json.getJSONObject("pull_request");
-            String url = pullRequest.getJSONObject("head").getJSONObject("repo").getString("clone_url");
-            File dir = new File("D:\\Github\\github\\server");
-            boolean cloned = cloneRepo(url,dir);;
+        /*if (json.has("pull_request")){
+        JSONObject pullRequest = json.getJSONObject("pull_request");
+        String repoUrl = pullRequest.getJSONObject("head").getJSONObject("repo").getString("clone_url");
+        String branch = pullRequest.getJSONObject("head").getString("ref");
+        boolean cloned = boolean cloned = cloneRepo(branch,url);*/
+        if (json.has("repository")) {
+            if (json.getJSONObject("repository").has("clone_url")) {
+                File dir = new File("D:\\Github\\github\\server");
+                boolean cloned = cloneRepo(json.getJSONObject("repository").getString("clone_url"),
+                        dir);
+                ProcessBuilder processBuilder = new ProcessBuilder();
                 if (cloned) {
                     // compile the code
                     response.getWriter().println("compiling the code");
-                    ProcessBuilder processBuilder = new ProcessBuilder();
+                    
                     Boolean compiled = compileCode(dir, processBuilder, false);
                     if (compiled) {
                         response.getWriter().println("compiled!");
@@ -123,11 +129,28 @@ public class ContinuousIntegrationServer extends AbstractHandler {
                     // test the code
                     // notify the status
                 } else {
+                    try {
                     // pull the code from the branch that the code was pushed to
-                    // compile the code
-                    // test the code
+                        response.getWriter().println("Clone exists, trying pull");
+                        Git git = Git.open(dir);
+                        git.pull().call();
+                        //compile code 
+                        boolean compiled = compileCode(dir, processBuilder, false);
+                        if (compiled) {
+                            response.getWriter().println("compiled!");
+                        } else {
+                            response.getWriter().println("not compiled!");
+                        }    
+                    }catch (MergeConflictException e){
+                        response.getWriter().println("merge conflict during pull: "+ e.getMessage());
+                    }catch (IOException | GitAPIException e){
+                        response.getWriter().println("Error during pull: " + e.getMessage());
+
+                    }
+                     // test the code
                     // notify the status
                 }
+            }
         }
         //}
         response.getWriter().println("CI job done");
