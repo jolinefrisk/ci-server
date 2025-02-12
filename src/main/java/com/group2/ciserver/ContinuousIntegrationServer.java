@@ -6,6 +6,7 @@ import javax.servlet.ServletException;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.Request;
@@ -23,6 +24,32 @@ import java.io.File;
  * See the Jetty documentation for API documentation of those classes.
  */
 public class ContinuousIntegrationServer extends AbstractHandler {
+
+    public static boolean runTests(File directory, ProcessBuilder processBuilder) {
+        boolean testsPassed = false;
+
+        try {
+            processBuilder.directory(directory);
+
+            processBuilder.command("bash", "-c", "mvn test");
+            
+            Process process = processBuilder.start();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+
+            String line;
+
+            while((line = reader.readLine()) != null) {
+                System.out.println(line);
+                if (line.contains("Failures: 0, Errors: 0, Skipped: 0")) {
+                    testsPassed = true;
+                }
+            }
+            return testsPassed;
+        } catch (Exception e) {
+                System.out.println(e.getMessage());
+                return testsPassed;
+        }
+    }
 
     public static JSONObject getPayload(BufferedReader reader) {
         StringBuilder jsonData = new StringBuilder();
@@ -80,8 +107,17 @@ public class ContinuousIntegrationServer extends AbstractHandler {
                         dir);
                 if (cloned) {
                     // compile the code
+                    ProcessBuilder processBuilder = new ProcessBuilder();
                     // test the code
-                    // notify the status
+                    boolean passedTests = runTests(dir, processBuilder);
+                    if (passedTests) {
+                        System.out.println("All tests passed!");
+                        // Notify the status
+                    } else {
+                        System.out.println("One or more tests failed!");
+                        // Notify the status
+                    }
+
                 } else {
                     // pull the code from the branch that the code was pushed to
                     // compile the code
