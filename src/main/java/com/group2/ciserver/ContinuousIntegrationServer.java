@@ -103,11 +103,13 @@ public class ContinuousIntegrationServer extends AbstractHandler {
 
         BufferedReader reader = request.getReader();
         JSONObject json = getPayload(reader);
-        if (json.has("repository")) {
-            if (json.getJSONObject("repository").has("clone_url")) {
-                File dir = new File("D:\\Github\\github\\server");
-                boolean cloned = cloneRepo(json.getJSONObject("repository").getString("clone_url"),
-                        dir);
+
+ 
+        if (json.has("pull_request")) {
+            JSONObject pullRequest = json.getJSONObject("pull_request");
+            String url = pullRequest.getJSONObject("head").getJSONObject("repo").getString("clone_url");
+            File dir = new File("D:\\Github\\github\\server");
+            boolean cloned = cloneRepo(url,dir);;
                 if (cloned) {
                     // compile the code
                     response.getWriter().println("compiling the code");
@@ -126,8 +128,8 @@ public class ContinuousIntegrationServer extends AbstractHandler {
                     // test the code
                     // notify the status
                 }
-            }
         }
+        //}
         response.getWriter().println("CI job done");
     }
 
