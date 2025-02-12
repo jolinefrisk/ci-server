@@ -88,7 +88,7 @@ public class ContinuousIntegrationServer extends AbstractHandler {
 
     public static boolean pullBranch(File directory, ProcessBuilder processBuilder, String branchP){
         try{
-            
+
             Git git = Git.open(directory);
             String branch = git.getRepository().getBranch();
 
@@ -159,8 +159,13 @@ public class ContinuousIntegrationServer extends AbstractHandler {
                    
                     // pull the code from the branch that the code was pushed to
                     response.getWriter().println("Clone exists, trying pull");
-                    String branchName = json.getJSONObject("pull_request").getJSONObject("head").getString("ref");
-                 
+                    String branchName;
+                    if (json.has("pull_request")) {
+                        branchName = json.getJSONObject("pull_request").getJSONObject("head").getString("ref");
+                    } else {
+                        branchName = json.getString("ref").replace("refs/heads/", "");
+                    }
+
                     Boolean compiled = pullBranch(dir, processBuilder, branchName);
                         // test the code
                     // notify the status
