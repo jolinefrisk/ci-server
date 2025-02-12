@@ -160,7 +160,7 @@ public class ContinuousIntegrationServer extends AbstractHandler {
                     // pull the code from the branch that the code was pushed to
             
                     response.getWriter().println("Clone exists, trying pull");
-                    String branchName =json.getString("ref").replaceFirst("ref/heads/", "");
+                    String branchName =json.getString("ref").replaceFirst("refs/heads/", "");
 
                     Boolean compiled = pullBranch(dir, processBuilder, branchName);
                         // test the code
