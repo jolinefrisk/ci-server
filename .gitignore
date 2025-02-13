@@ -12,3 +12,7 @@
 .DS_Store
 Thumbs.db
 /.vscode
+
+# for access token
+token.txt
+
