@@ -16,7 +16,7 @@ cd ci-server
 
 to implement the server  is to make sure that all dependencies are installed
 
-Apache Marven 3.9.9
+Apache Maven 3.9.9
 Installation [guide for Maven](https://maven.apache.org/install.html)
 
 ngok
