@@ -97,6 +97,46 @@ public class AppTest {
     }
 
     @Test
+    public void positiveTestTests() throws Exception {
+        File testDir = mock(File.class); 
+        ProcessBuilder processBuilder = mock(ProcessBuilder.class);
+        Process process = mock(Process.class);
+
+        when(testDir.exists()).thenReturn(true);
+
+        when(processBuilder.start()).thenReturn(process);
+
+        String testMessage = "Failures: 0, Errors: 0, Skipped: 0";
+        //String testMessage = "hey";
+        InputStream testInput = new ByteArrayInputStream(testMessage.getBytes());
+        when(process.getInputStream()).thenReturn(testInput);
+
+        boolean result = ContinuousIntegrationServer.runTests(testDir, processBuilder);
+
+        assertTrue(result);
+    }
+
+    @Test
+    public void negativeTestTests() throws Exception {
+        File testDir = mock(File.class); 
+        File testPomFile = mock(File.class);
+        ProcessBuilder processBuilder = mock(ProcessBuilder.class);
+        Process process = mock(Process.class);
+
+        when(testDir.exists()).thenReturn(true);
+        when(testPomFile.exists()).thenReturn(true);
+        when(processBuilder.start()).thenReturn(process);
+
+        String testMessage = "bro java is a-";
+        InputStream testInput = new ByteArrayInputStream(testMessage.getBytes());
+        when(process.getInputStream()).thenReturn(testInput);
+
+        boolean result = ContinuousIntegrationServer.runTests(testDir, processBuilder);
+
+        assertFalse(result);
+    }
+
+    @Test
     public void positiveTestCompile() throws Exception {
         File testDir = mock(File.class);
         ProcessBuilder processBuilder = mock(ProcessBuilder.class);

@@ -26,6 +26,32 @@ import java.io.File;
  */
 public class ContinuousIntegrationServer extends AbstractHandler {
 
+    public static boolean runTests(File directory, ProcessBuilder processBuilder) {
+        boolean testsPassed = false;
+
+        try {
+            processBuilder.directory(directory);
+
+            processBuilder.command("bash", "-c", "mvn test");
+            
+            Process process = processBuilder.start();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+
+            String line;
+
+            while((line = reader.readLine()) != null) {
+                System.out.println(line);
+                if (line.contains("Failures: 0, Errors: 0, Skipped: 0")) {
+                    testsPassed = true;
+                }
+            }
+            return testsPassed;
+        } catch (Exception e) {
+                System.out.println(e.getMessage());
+                return testsPassed;
+        }
+    }
+
     public static JSONObject getPayload(BufferedReader reader) {
         StringBuilder jsonData = new StringBuilder();
         String line;
@@ -147,14 +173,23 @@ public class ContinuousIntegrationServer extends AbstractHandler {
                     // compile the code
                     response.getWriter().println("compiling the code");
                     
-                    Boolean compiled = compileCode(dir, processBuilder, false);
+                    Boolean compiled = compileCode(dir, processBuilder, true);
                     if (compiled) {
                         response.getWriter().println("compiled!");
+                        // test the code
+                        boolean passedTests = runTests(dir, processBuilder);
+                        if (passedTests) {
+                            System.out.println("All tests passed!");
+                            // Notify the status
+                        } else {
+                            System.out.println("One or more tests failed!");
+                            // Notify the status
+                        }
                     } else {
                         response.getWriter().println("not compiled!");
                     }
-                    // test the code
-                    // notify the status
+                    
+
                 } else {
                    
                     // pull the code from the branch that the code was pushed to
@@ -162,13 +197,26 @@ public class ContinuousIntegrationServer extends AbstractHandler {
                     response.getWriter().println("Clone exists, trying pull");
                     String branchName =json.getString("ref").replaceFirst("refs/heads/", "");
 
-                    Boolean compiled = pullBranch(dir, processBuilder, branchName);
-                        // test the code
-                    // notify the status
-                    if (compiled) {
-                        response.getWriter().println("compiled!");
-                    } else {
-                        response.getWriter().println("not compiled!");
+                    Boolean pulled = pullBranch(dir, processBuilder, branchName);
+                    if (pulled) {
+                        Boolean compiled = compileCode(dir, processBuilder, true);
+                        // notify the status
+                        if (compiled) {
+                            response.getWriter().println("compiled!");
+                            // test the code
+                            boolean passedTests = runTests(dir, processBuilder);
+                            if (passedTests) {
+                                System.out.println("All tests passed!");
+                                // Notify the status
+                            } else {
+                                System.out.println("One or more tests failed!");
+                                // Notify the status
+                            }
+                        } else {
+                            response.getWriter().println("not compiled!");
+                        } 
+                    }   else {
+                        response.getWriter().println("Pull failed!");
                     }
                 }
             }
