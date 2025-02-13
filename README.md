@@ -22,21 +22,21 @@ Installation [guide for Maven](https://maven.apache.org/install.html)
 ngok
 Installation [guide for ngok](https://ngrok.com/docs/guides/device-gateway/linux/)
 
-### 1. Compile the project:
+#### 1. Compile the project:
 
 ```mvn clean package```
 
-### 2. Start the server:
+#### 2. Start the server:
 
 ```java -jar target/ci-server-1.0-SNAPSHOT.jar```
 
-### 3. Expose the server via Ngrok:
+#### 3. Expose the server via Ngrok:
 
 Open a new terminal window and run:
 
 ```ngrok http 8080```
 
-### 4. Connect CI-server to the Repository:
+#### 4. Connect CI-server to the Repository:
 
 Ngrok will generate a URL that can be used to connect the server to a Webhook.
 
