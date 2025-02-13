@@ -98,7 +98,7 @@ public class AppTest {
 
     @Test
     public void positiveTestTests() throws Exception {
-        File testDir = mock(File.class); 
+        File testDir = mock(File.class);
         ProcessBuilder processBuilder = mock(ProcessBuilder.class);
         Process process = mock(Process.class);
 
@@ -107,7 +107,7 @@ public class AppTest {
         when(processBuilder.start()).thenReturn(process);
 
         String testMessage = "Failures: 0, Errors: 0, Skipped: 0";
-        //String testMessage = "hey";
+        // String testMessage = "hey";
         InputStream testInput = new ByteArrayInputStream(testMessage.getBytes());
         when(process.getInputStream()).thenReturn(testInput);
 
@@ -118,7 +118,7 @@ public class AppTest {
 
     @Test
     public void negativeTestTests() throws Exception {
-        File testDir = mock(File.class); 
+        File testDir = mock(File.class);
         File testPomFile = mock(File.class);
         ProcessBuilder processBuilder = mock(ProcessBuilder.class);
         Process process = mock(Process.class);
@@ -148,7 +148,7 @@ public class AppTest {
         InputStream inStream = new ByteArrayInputStream(message.getBytes());
         when(process.getInputStream()).thenReturn(inStream);
 
-        assertTrue(ContinuousIntegrationServer.compileCode(testDir, processBuilder, true));
+        assertTrue(ContinuousIntegrationServer.compileCode(testDir, processBuilder));
     }
 
     @Test
@@ -164,54 +164,57 @@ public class AppTest {
         InputStream inStream = new ByteArrayInputStream(message.getBytes());
         when(process.getInputStream()).thenReturn(inStream);
 
-        assertFalse(ContinuousIntegrationServer.compileCode(testDir, processBuilder, true));
+        assertFalse(ContinuousIntegrationServer.compileCode(testDir, processBuilder));
     }
 
     @Test
     public void invalidTestCompile() {
         File testDir = new File("jkhdfg");
         ProcessBuilder processBuilder = new ProcessBuilder();
-        assertFalse(ContinuousIntegrationServer.compileCode(testDir, processBuilder, true));
+        assertFalse(ContinuousIntegrationServer.compileCode(testDir, processBuilder));
     }
 
     @Test
     public void successCommitStatusNotification() {
-        //https://github.com/VictoriaHellstrom/testing-repo   
+        // https://github.com/VictoriaHellstrom/testing-repo
         String owner = "VictoriaHellstrom";
         String repo = "testing-repo";
         String status = "success";
         String commitSHA = "2406ba3bb032a9660441c1fcdbabdda895ea9b93";
         String desc = "Everything is fine";
         String accessToken = "ACCESS_TOKEN";
-        
-        boolean response = ContinuousIntegrationServer.setCommitStatus(owner, repo, commitSHA, status, desc, accessToken);
+
+        boolean response = ContinuousIntegrationServer.setCommitStatus(owner, repo, commitSHA, status, desc,
+                accessToken);
         assertTrue(response);
 
     }
 
     @Test
-    public void failureCommitStatusNotification() {   
+    public void failureCommitStatusNotification() {
         String owner = "VictoriaHellstrom";
         String repo = "testing-repo";
         String status = "failure";
         String commitSHA = "2406ba3bb032a9660441c1fcdbabdda895ea9b93";
         String desc = "Everything is not fine";
         String accessToken = "ACCESS_TOKEN";
-        
-        boolean response = ContinuousIntegrationServer.setCommitStatus(owner, repo, commitSHA, status, desc, accessToken);
+
+        boolean response = ContinuousIntegrationServer.setCommitStatus(owner, repo, commitSHA, status, desc,
+                accessToken);
         assertTrue(response);
     }
 
     @Test
-    public void failureCommitStatusNotificationWrongRepoParameters() {   
+    public void failureCommitStatusNotificationWrongRepoParameters() {
         String owner = "shaquile";
         String repo = "oneil";
         String status = "true";
         String commitSHA = "to be changed";
         String desc = "Shaq does not have a repo";
         String accessToken = "toBeChanged";
-        
-        boolean response = ContinuousIntegrationServer.setCommitStatus(owner, repo, commitSHA, status, desc, accessToken);
+
+        boolean response = ContinuousIntegrationServer.setCommitStatus(owner, repo, commitSHA, status, desc,
+                accessToken);
         assertFalse(response);
     }
 
