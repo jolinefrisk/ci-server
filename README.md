@@ -1,28 +1,28 @@
 # CI-Server Group 2
-This project is built from https://github.com/KTH-DD2480/smallest-java-ci
-It is a CI-server that is meant to be called as a webhook by Github that can be compiled and run using Maven.
+This project is built from [smallest-java-ci.](https://github.com/KTH-DD2480/smallest-java-ci)
+It is a CI-server designed to be triggered as a webhook by GitHub and can be compiled and run using Maven.
 
 
 
 ## Install Dependencies and Run CI-Server:
 
 
-First is to check out the repository :
+First, clone the repository:
 ```
 git clone https://github.com/jolinefrisk/ci-server
 cd ci-server
 ```
 
 
-to implement the server  is to make sure that all dependencies are installed
+Before running the server, ensure all dependencies are installed:
 
-Apache Majavaven 3.9.9
-Installation [guide for Maven](https://maven.apache.org/install.html)
+* Apache Maven 3.9.9
+[Installation guide for Maven](https://maven.apache.org/install.html)
 
-ngok
-Installation [guide for ngok](https://ngrok.com/docs/guides/device-gateway/linux/)
+* Ngrok
+[Installation guide for Ngrok](https://ngrok.com/docs/guides/device-gateway/linux/)
 
-Other dependencies is Java version "21.0.5"
+* Java 21.0.5 (Ensure it is installed and set as the active Java version)
 
 #### 1. Compile the project:
 
@@ -41,24 +41,30 @@ java -jar target/ci-server-1.0-SNAPSHOT.jar
 Open a new terminal window and run:
 
 ```
-grok http 8080
+ngrok http 8080
 ```
 
 #### 4. Connect CI-server to the Repository:
 
-Ngrok will generate a URL that can be used to connect the server to a Webhook.
+Ngrok will generate a URL that can be used to connect the server to a webhook.
 
-To configure the Github Repository:
-go to Settings >> Webhooks, click on Add webhook.
-Paste the forwardinf URL you got from the termenal (exaple http://8929b010.ngrok.io) in field Payload URL) click on Add webbhock. 
-To thest that evrything wokrs go to http://localhost:8080 tp check that the CI server is running locally
+To set up the GitHub webhook:
+1. Go to Settings → Webhooks → Click Add webhook.
+2. Paste the forwarding URL you got from the terminal (e.g., http://8929b010.ngrok.io) in the Payload URL field.
+3. Click Add webhook.
 
-## Code logic
+#### 5. Verify that everything works:
 
-## Essence standard evaluation
+Open a browser and go to http://localhost:8080 to check if the CI server is running locally.
 
-## Statement of contributions
-Jacob Lindström Bjäreklint - 
-Roger Chen -
-Joline Frisk -
-Victoria Hellström - 
+## Code logic:
+
+## Essence standard evaluation:
+
+## Statement of contributions:
+| Name                     | Contribution                          |
+|--------------------------|--------------------------------------|
+| Jacob Lindström Bjäreklint | [Describe contribution]             |
+| Roger Chen               | [Describe contribution]             |
+| Joline Frisk             | Created the pull functionality and tests for it. |
+| Victoria Hellström       | [Describe contribution]             |
