@@ -55,7 +55,8 @@ Ngrok will generate a URL that can be used to connect the server to a webhook.
 To set up the GitHub webhook:
 1. Go to Settings → Webhooks → Click Add webhook.
 2. Paste the forwarding URL you got from the terminal (e.g., http://8929b010.ngrok.io) in the Payload URL field.
-3. Click Add webhook.
+3. When choosing Content type *, pick application/json
+4. Click Add webhook.
 
 #### 5. Verify that everything works:
 
