@@ -88,6 +88,15 @@ public class ContinuousIntegrationServer extends AbstractHandler {
         }
     }
 
+    /**
+     * Clones a Git repository into the specified directory. This is accomplished 
+     * using JGit's cloneRepository() method to retrieve the repository from the given URL.
+     *
+     * @param url        the URL of the Git repository to be cloned
+     * @param directory  the directory where the repository should be cloned
+     * @return           true if the cloning was successful, false otherwise
+     * @see org.eclipse.jgit.api.Git#cloneRepository()
+     */
     public static boolean cloneRepo(String url, File directory) {
 
         if (directory.exists()) {
@@ -103,6 +112,16 @@ public class ContinuousIntegrationServer extends AbstractHandler {
         }
     }
 
+    /**
+     * Compiles the source code in the specified directory using Maven. 
+     * This is accomplished by executing the "mvn clean compile" command in a Bash enviroment
+     * via the ProcessBuilder class and checking if the build is successful.
+     *
+     * @param directory        the directory containing the Maven project to be compiled
+     * @param processBuilder   the process builder instance that runs the compilation command
+     * @return                 true if the compilation is successful, false otherwise
+     * @see ProcessBuilder
+     */
     public static boolean compileCode(File directory, ProcessBuilder processBuilder) {
 
         try {
@@ -127,6 +146,20 @@ public class ContinuousIntegrationServer extends AbstractHandler {
         }
     }
 
+    /**
+     * Updates the status of a specific commit on GitHub using the GitHub API.
+     * This method sends a POST request to the repository's commit status endpoint
+     * with the specified state and description.
+     *
+     * @param repoOwner    the owner of the GitHub repository
+     * @param repoName     the name of the GitHub repository
+     * @param commitSHA    the SHA hash of the commit to update
+     * @param state        the status to set for the commit (must be "error", "failure", "pending", or "success")
+     * @param description  a brief description of the commit status
+     * @param accessToken  a GitHub personal access token with repo permissions
+     * @return             true if the status update is successful, false otherwise
+     * @see <a href="https://docs.github.com/en/rest/commits/statuses?apiVersion=2022-11-28">GitHub Commit Status API</a>
+     */
     public static boolean setCommitStatus(String repoOwner, String repoName, String commitSHA, String state,
             String description, String accessToken) {
         boolean commitStatusSet = false;
@@ -170,6 +203,18 @@ public class ContinuousIntegrationServer extends AbstractHandler {
         return commitStatusSet;
     }
 
+    /**
+     * Pulls the latest changes from the specified branch of a Git repository.
+     * If the branch does not exist locally, it attempts to create and track it from the remote repository.
+     * After pulling, it compiles the code using Maven.
+     *
+     * @param directory       the directory containing the Git repository
+     * @param processBuilder  the process builder instance used for compilation
+     * @param branchP         the name of the branch to pull
+     * @return                true if the pull and compilation are successful, false otherwise
+     * @see Git#pull()
+     * @see #compileCode(File, ProcessBuilder)
+     */
     public static boolean pullBranch(File directory, ProcessBuilder processBuilder, String branchP) {
         try {
 
@@ -196,6 +241,19 @@ public class ContinuousIntegrationServer extends AbstractHandler {
         }
     }
 
+    /**
+     * Handles incoming HTTP requests for the CI server. This method processes webhook payloads,
+     * sets response headers, and asynchronously executes continuous integration tasks.
+     * The CI tasks may include cloning the repository, compiling the code, and running tests.
+     *
+     * @param target       the request target (URL path)
+     * @param baseRequest  the original Jetty request
+     * @param request      the HTTP servlet request containing the webhook payload
+     * @param response     the HTTP servlet response
+     * @throws IOException      if an input or output error occurs while handling the request
+     * @throws ServletException if the request could not be handled
+     * @see #processCIJob(JSONObject, String)
+     */
     public void handle(String target,
             Request baseRequest,
             HttpServletRequest request,
@@ -222,6 +280,25 @@ public class ContinuousIntegrationServer extends AbstractHandler {
         CompletableFuture.runAsync(() -> processCIJob(json, accessToken));
     }
 
+    /**
+     * Processes a continuous integration (CI) job based on the webhook payload.
+     * This method performs the following steps:
+     * <ol>
+     *   <li>Clones the repository if it does not already exist.</li>
+     *   <li>If cloning fails, attempts to pull the latest changes from the pushed branch.</li>
+     *   <li>Compiles the code using Maven.</li>
+     *   <li>Runs the test suite if compilation is successful.</li>
+     *   <li>Updates the commit status on GitHub based on the results.</li>
+     * </ol>
+     *
+     * @param json         the JSON payload received from the webhook, containing repository and commit details
+     * @param accessToken  the GitHub access token used for authentication in API requests
+     * @see #cloneRepo(String, File)
+     * @see #pullBranch(File, ProcessBuilder, String)
+     * @see #compileCode(File, ProcessBuilder)
+     * @see #runTests(File, ProcessBuilder)
+     * @see #setCommitStatus(String, String, String, String, String, String)
+     */
     public static void processCIJob(JSONObject json, String accessToken) {
         try {
             if (json.has("repository")) {
@@ -309,7 +386,16 @@ public class ContinuousIntegrationServer extends AbstractHandler {
 
     }
 
-    // used to start the CI server in command line
+    /**
+     * The entry point for starting the Continuous Integration (CI) server.
+     * This method initializes a Jetty server on port 8080, sets the request handler,
+     * and starts the server to listen for incoming webhook events.
+     *
+     * @param args command-line arguments
+     * @throws Exception if the server fails to start or encounters an error
+     * @see Server
+     * @see ContinuousIntegrationServer
+     */
     public static void main(String[] args) throws Exception {
         Server server = new Server(8080);
         server.setHandler(new ContinuousIntegrationServer());
