@@ -16,13 +16,13 @@ cd ci-server
 
 to implement the server  is to make sure that all dependencies are installed
 
-Apache Maven 3.9.9
+Apache Majavaven 3.9.9
 Installation [guide for Maven](https://maven.apache.org/install.html)
 
 ngok
 Installation [guide for ngok](https://ngrok.com/docs/guides/device-gateway/linux/)
 
-Other dependencies is Java JRE: 15.0.1
+Other dependencies is Java version "21.0.5"
 
 #### 1. Compile the project:
 
