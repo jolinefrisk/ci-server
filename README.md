@@ -22,8 +22,6 @@ Installation [guide for Maven](https://maven.apache.org/install.html)
 ngok
 Installation [guide for ngok](https://ngrok.com/docs/guides/device-gateway/linux/)
 
-Other dependencies is Java JRE: 15.0.1
-
 #### 1. Compile the project:
 
 ```
@@ -58,7 +56,3 @@ To thest that evrything wokrs go to http://localhost:8080 tp check that the CI s
 ## Essence standard evaluation
 
 ## Statement of contributions
-Jacob Lindström Bjäreklint - 
-Roger Chen -
-Joline Frisk -
-Victoria Hellström - 
