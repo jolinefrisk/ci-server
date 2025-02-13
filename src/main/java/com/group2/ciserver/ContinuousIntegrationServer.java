@@ -198,6 +198,11 @@ public class ContinuousIntegrationServer extends AbstractHandler {
 
         System.out.println(target);
 
+        String accessToken = "to be changed"; 
+        if (accessToken == "to be changed"){
+            System.out.println("Failed to insert access token in handle()");
+        }
+
         // here you do all the continuous integration tasks
         // for example
         // 1st clone your repository
@@ -212,6 +217,10 @@ public class ContinuousIntegrationServer extends AbstractHandler {
         String branch = pullRequest.getJSONObject("head").getString("ref");
         boolean cloned = boolean cloned = cloneRepo(branch,url);*/
         if (json.has("repository")) {
+            String owner = json.getJSONObject("repository").getJSONObject("owner").getString("name");
+            String repo = json.getJSONObject("repository").getString("name");
+            String commitSHA = json.getString("after");
+
             if (json.getJSONObject("repository").has("clone_url")) {
                 File dir = new File("D:\\Github\\github\\server");
                 boolean cloned = cloneRepo(json.getJSONObject("repository").getString("clone_url"),
@@ -226,12 +235,23 @@ public class ContinuousIntegrationServer extends AbstractHandler {
                         response.getWriter().println("compiled!");
                         // test the code
                         boolean passedTests = runTests(dir, processBuilder);
+
                         if (passedTests) {
-                            System.out.println("All tests passed!");
-                            // Notify the status
+                            String status = "success";
+                            String desc = "All tests passed!";           
+                            System.out.println(desc);
+                            boolean setStatus = setCommitStatus( owner, repo, commitSHA, status, desc, accessToken);
+                            if (!setStatus){
+                                System.out.println("Failed to set commit status");
+                            }
                         } else {
-                            System.out.println("One or more tests failed!");
-                            // Notify the status
+                            String status = "failure";
+                            String desc = "One or more tests failed!";           
+                            System.out.println(desc);
+                            boolean setStatus = setCommitStatus( owner, repo, commitSHA, status, desc, accessToken);
+                            if (!setStatus){
+                                System.out.println("Failed to set commit status");
+                            }
                         }
                     } else {
                         response.getWriter().println("not compiled!");
@@ -254,11 +274,21 @@ public class ContinuousIntegrationServer extends AbstractHandler {
                             // test the code
                             boolean passedTests = runTests(dir, processBuilder);
                             if (passedTests) {
-                                System.out.println("All tests passed!");
-                                // Notify the status
+                                String status = "success";
+                                String desc = "All tests passed!";           
+                                System.out.println(desc);
+                                boolean setStatus = setCommitStatus( owner, repo, commitSHA, status, desc, accessToken);
+                                if (!setStatus){
+                                    System.out.println("Failed to set commit status");
+                                }
                             } else {
-                                System.out.println("One or more tests failed!");
-                                // Notify the status
+                                String status = "failure";
+                                String desc = "One or more tests failed!";           
+                                System.out.println(desc);
+                                boolean setStatus = setCommitStatus( owner, repo, commitSHA, status, desc, accessToken);
+                                if (!setStatus){
+                                    System.out.println("Failed to set commit status");
+                                }
                             }
                         } else {
                             response.getWriter().println("not compiled!");
