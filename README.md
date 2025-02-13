@@ -24,7 +24,7 @@ Before running the server, ensure all dependencies are installed:
 
 * Java 21.0.5 (Ensure it is installed and set as the active Java version)
 
-Also ensure to assigned your access token to the variable accessToken in ContinuousIntegrationServer.java method handle() to be able to set commit statuses.
+Also, ensure to assign your access token to the variable accessToken in the handle() method of ContinuousIntegrationServer.java to be able to set commit statuses. The access token must have repository permissions, specifically the repo scope, to update the commit status on GitHub.
 
 #### 1. Compile the project:
 
