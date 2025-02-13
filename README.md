@@ -61,6 +61,12 @@ Open a browser and go to http://localhost:8080 to check if the CI server is runn
 
 ## Code logic:
 
+compileCode(): The CI server compiles the code using the command mvn clean compile in a Bash environment. It then reads the output from the process and checks if it contains the line "BUILD SUCCESS", which indicates that the compilation was successful. If the code has been compiled successfully, the method returns true; otherwise, it returns false.To test the method, three unit tests are implemented: one positive, one negative, and one with invalid input.
+Positive Test: Uses mocking to simulate an output containing "BUILD SUCCESS", verifying that the method returns true.
+Negative Test: Similar to the positive test, but the output does not contain "BUILD SUCCESS", ensuring that the method returns false.
+Invalid Input Test: Tests the method with an invalid directory to check how it handles incorrect input, expecting it to return false.
+
+
 runTests() covering P2: implemented by running Maven command "mvn test" with help of the Java ProcessBuilder package. After that the method checked output for signature that all tests ran were succesful. runTests() was tested with mock library and using an expected true and false test.
 
 ## Essence standard evaluation:
