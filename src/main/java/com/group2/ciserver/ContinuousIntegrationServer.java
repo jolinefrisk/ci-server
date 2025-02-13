@@ -13,11 +13,12 @@ import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 
 import org.json.JSONObject;
-
+import org.openl.rules.repository.git.MergeConflictException;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 
 import java.io.File;
+
 
 /**
  * Skeleton of a ContinuousIntegrationServer which acts as webhook
@@ -77,10 +78,66 @@ public class ContinuousIntegrationServer extends AbstractHandler {
             Git.cloneRepository().setURI(url).setDirectory(directory).call();
             return true;
         } catch (GitAPIException e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage());
             return false;
         }
     }
+
+    public static boolean compileCode(File directory, ProcessBuilder processBuilder, Boolean bash) {
+
+        try {
+            processBuilder.directory(directory);
+            if (bash) {
+                processBuilder.command("bash", "-c", "mvn clean compile");
+            } else {
+                processBuilder.command("cmd.exe", "/c", "mvn clean compile");
+            }
+
+            Process process = processBuilder.start();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+
+            String line;
+            Boolean compiled = false;
+
+            while ((line = reader.readLine()) != null) {
+                System.out.println(line);
+                if (line.contains("BUILD SUCCESS")) {
+                    compiled = true;
+                }
+            }
+            return compiled;
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            return false;
+        }
+    }
+
+    public static boolean pullBranch(File directory, ProcessBuilder processBuilder, String branchP){
+        try{
+
+            Git git = Git.open(directory);
+            String branch = git.getRepository().getBranch();
+
+            if (!branch.equals(branchP)){
+                try {
+                    git.checkout().setName(branchP).call();
+                } catch (Exception e) {
+                    git.checkout().setCreateBranch(true).setName(branchP).setStartPoint("origin/" + branchP).call();
+                }
+            }
+
+            git.pull().call();
+ 
+            return compileCode(directory, processBuilder, false);
+        }catch (MergeConflictException e){
+            System.out.println("merge conflict during pull: "+ e.getMessage());
+            return false;
+        }catch (IOException | GitAPIException e){
+            System.out.println("Error during pull: " + e.getMessage());
+            return false;
+        }
+    }
+
 
     public void handle(String target,
             Request baseRequest,
@@ -100,32 +157,71 @@ public class ContinuousIntegrationServer extends AbstractHandler {
 
         BufferedReader reader = request.getReader();
         JSONObject json = getPayload(reader);
+
+        /*if (json.has("pull_request")){
+        JSONObject pullRequest = json.getJSONObject("pull_request");
+        String repoUrl = pullRequest.getJSONObject("head").getJSONObject("repo").getString("clone_url");
+        String branch = pullRequest.getJSONObject("head").getString("ref");
+        boolean cloned = boolean cloned = cloneRepo(branch,url);*/
         if (json.has("repository")) {
             if (json.getJSONObject("repository").has("clone_url")) {
                 File dir = new File("D:\\Github\\github\\server");
                 boolean cloned = cloneRepo(json.getJSONObject("repository").getString("clone_url"),
                         dir);
+                ProcessBuilder processBuilder = new ProcessBuilder();
                 if (cloned) {
                     // compile the code
-                    ProcessBuilder processBuilder = new ProcessBuilder();
-                    // test the code
-                    boolean passedTests = runTests(dir, processBuilder);
-                    if (passedTests) {
-                        System.out.println("All tests passed!");
-                        // Notify the status
+                    response.getWriter().println("compiling the code");
+                    
+                    Boolean compiled = compileCode(dir, processBuilder, true);
+                    if (compiled) {
+                        response.getWriter().println("compiled!");
+                        // test the code
+                        boolean passedTests = runTests(dir, processBuilder);
+                        if (passedTests) {
+                            System.out.println("All tests passed!");
+                            // Notify the status
+                        } else {
+                            System.out.println("One or more tests failed!");
+                            // Notify the status
+                        }
                     } else {
-                        System.out.println("One or more tests failed!");
-                        // Notify the status
+                        response.getWriter().println("not compiled!");
                     }
+                    
 
                 } else {
+                   
                     // pull the code from the branch that the code was pushed to
-                    // compile the code
-                    // test the code
-                    // notify the status
+            
+                    response.getWriter().println("Clone exists, trying pull");
+                    String branchName =json.getString("ref").replaceFirst("refs/heads/", "");
+
+                    Boolean pulled = pullBranch(dir, processBuilder, branchName);
+                    if (pulled) {
+                        Boolean compiled = compileCode(dir, processBuilder, true);
+                        // notify the status
+                        if (compiled) {
+                            response.getWriter().println("compiled!");
+                            // test the code
+                            boolean passedTests = runTests(dir, processBuilder);
+                            if (passedTests) {
+                                System.out.println("All tests passed!");
+                                // Notify the status
+                            } else {
+                                System.out.println("One or more tests failed!");
+                                // Notify the status
+                            }
+                        } else {
+                            response.getWriter().println("not compiled!");
+                        } 
+                    }   else {
+                        response.getWriter().println("Pull failed!");
+                    }
                 }
             }
         }
+        //}
         response.getWriter().println("CI job done");
     }
 

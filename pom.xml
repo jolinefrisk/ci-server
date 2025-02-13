@@ -81,6 +81,12 @@
         <scope>test</scope>
     </dependency>
 
+  
+    <dependency>
+      <groupId>org.openl.rules</groupId>
+      <artifactId>org.openl.rules.repository.git</artifactId>
+      <version>5.27.9-jakarta</version>
+    </dependency>
   </dependencies>
 
   <build>
