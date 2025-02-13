@@ -37,7 +37,7 @@ public class ContinuousIntegrationServer extends AbstractHandler {
     * @param directory         the directory containing the Maven environment
     * @param processBuilder    the process builder instance that runs commands
     * @return                  true if all tests are succesful
-    * @see ProcessBuilder      
+    * @see ProcessBuilder 
     */
     public static boolean runTests(File directory, ProcessBuilder processBuilder) {
         boolean testsPassed = false;
@@ -65,6 +65,13 @@ public class ContinuousIntegrationServer extends AbstractHandler {
         }
     }
 
+    /**
+    * Get payload from request and returns it in the form of a JSONObject.
+    * 
+    * @param reader    BufferedReader containing the payload.
+    * @return          payload data as a JSONObject
+    * @see JSONObject
+    */
     public static JSONObject getPayload(BufferedReader reader) {
         StringBuilder jsonData = new StringBuilder();
         String line;
