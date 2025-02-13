@@ -26,6 +26,8 @@ Before running the server, ensure all dependencies are installed:
 
 Also, ensure to assign your access token to the variable accessToken in the handle() method of ContinuousIntegrationServer.java to be able to set commit statuses. The access token must have repository permissions, specifically the repo scope, to update the commit status on GitHub.
 
+Furthermore, add where you would like to clone your repo in "File dir = new File("D:\\Github\\github\\server");" in ContinuousIntegrationServer.java.
+
 #### 1. Compile the project:
 
 ```
