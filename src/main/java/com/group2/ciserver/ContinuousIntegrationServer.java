@@ -25,7 +25,7 @@ import java.io.File;
 
 
 /**
- * Skeleton of a ContinuousIntegrationServer which acts as webhook
+ * This class represents a Continuous Integration (CI) server which acts as webhook.
  * See the Jetty documentation for API documentation of those classes.
  */
 public class ContinuousIntegrationServer extends AbstractHandler {
