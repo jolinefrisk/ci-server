@@ -24,6 +24,8 @@ Before running the server, ensure all dependencies are installed:
 
 * Java 21.0.5 (Ensure it is installed and set as the active Java version)
 
+Also ensure to assigned your access token to the variable accessToken in ContinuousIntegrationServer.java method handle() to be able to set commit statuses.
+
 #### 1. Compile the project:
 
 ```
@@ -68,4 +70,4 @@ Our team has previously reached the "In Use" stage of the Essence Standard Evalu
 | Jacob Lindström Bjäreklint | [Describe contribution]             |
 | Roger Chen               | [Describe contribution]             |
 | Joline Frisk             | Created the pull functionality and tests for it. |
-| Victoria Hellström       | [Describe contribution]             |
+| Victoria Hellström       | Created feature #3 notification of CI results by setting commit status in the repository and the tests for it. |
