@@ -24,17 +24,23 @@ Installation [guide for ngok](https://ngrok.com/docs/guides/device-gateway/linux
 
 #### 1. Compile the project:
 
-```mvn clean package```
+```
+mvn clean package
+```
 
 #### 2. Start the server:
 
-```java -jar target/ci-server-1.0-SNAPSHOT.jar```
+```
+java -jar target/ci-server-1.0-SNAPSHOT.jar
+```
 
 #### 3. Expose the server via Ngrok:
 
 Open a new terminal window and run:
 
-```ngrok http 8080```
+```
+grok http 8080
+```
 
 #### 4. Connect CI-server to the Repository:
 
