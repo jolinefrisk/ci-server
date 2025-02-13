@@ -69,7 +69,7 @@ Our team has previously reached the "In Use" stage of the Essence Standard Evalu
 ## Statement of contributions:
 | Name                     | Contribution                          |
 |--------------------------|--------------------------------------|
-| Jacob Lindström Bjäreklint Wrote the methods getPayload, cloneRepo, and compileCode with the corresponding unit testing.             |
+| Jacob Lindström Bjäreklint| Wrote the methods getPayload, cloneRepo, and compileCode with the corresponding unit testing.             |
 | Roger Chen               | Testing functionality (P2) and a little bit of documentation.          |
 | Joline Frisk             | Created the pull functionality and tests for it. |
 | Victoria Hellström       | Created feature #3 notification of CI results by setting commit status in the repository and the tests for it. |
