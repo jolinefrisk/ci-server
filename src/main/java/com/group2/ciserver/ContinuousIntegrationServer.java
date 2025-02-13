@@ -30,6 +30,15 @@ import java.io.File;
  */
 public class ContinuousIntegrationServer extends AbstractHandler {
 
+    /**
+    * Runs the tests for the . This is accomplished by executing tests in a Maven environment
+    * via command line through the ProcessBuilder class and checking if all tests pass.
+    *
+    * @param directory         the directory containing the Maven environment
+    * @param processBuilder    the process builder instance that runs commands
+    * @return                  true if all tests are succesful
+    * @see ProcessBuilder      
+    */
     public static boolean runTests(File directory, ProcessBuilder processBuilder) {
         boolean testsPassed = false;
 
