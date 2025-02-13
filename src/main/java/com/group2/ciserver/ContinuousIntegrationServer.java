@@ -253,7 +253,7 @@ public class ContinuousIntegrationServer extends AbstractHandler {
                                 boolean passedTests = runTests(dir, processBuilder);
                                 if (passedTests) {
                                     String status = "success";
-                                    String desc = "All tests passed!";
+                                    String desc = "All tests passed and the code compiled!";
                                     System.out.println(desc);
                                     boolean setStatus = setCommitStatus(owner, repo, commitSHA, status, desc,
                                             accessToken);
@@ -262,7 +262,7 @@ public class ContinuousIntegrationServer extends AbstractHandler {
                                     }
                                 } else {
                                     String status = "failure";
-                                    String desc = "One or more tests failed!";
+                                    String desc = "One or more tests failed but the code compiled!";
                                     System.out.println(desc);
                                     boolean setStatus = setCommitStatus(owner, repo, commitSHA, status, desc,
                                             accessToken);
@@ -272,6 +272,14 @@ public class ContinuousIntegrationServer extends AbstractHandler {
                                 }
                             } else {
                                 System.out.println("not compiled!");
+                                String status = "failure";
+                                String desc = "Failed to compile the code!";
+                                System.out.println(desc);
+                                boolean setStatus = setCommitStatus(owner, repo, commitSHA, status, desc,
+                                        accessToken);
+                                if (!setStatus) {
+                                    System.out.println("Failed to set commit status");
+                                }
                             }
                         } else {
                             System.out.println("Pull failed!");
