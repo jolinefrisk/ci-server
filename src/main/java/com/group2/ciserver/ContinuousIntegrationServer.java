@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
 
 
@@ -120,38 +121,36 @@ public class ContinuousIntegrationServer extends AbstractHandler {
     public static boolean setCommitStatus(String repoOwner, String repoName, String commitSHA, String state, String description, String accessToken) {
         boolean commitStatusSet = false;
         try {
-            String url = "https://api.github.com/repos/" + repoOwner + "/" + repoName + "/statuses/" + commitSHA;
-            URL obj = new URL(url);
-            HttpURLConnection httpUrlConnection = (HttpURLConnection) obj.openConnection();
-
-            httpUrlConnection.setRequestMethod("POST");
-            httpUrlConnection.setRequestProperty("Authorization", "Bearer " + accessToken);
-            httpUrlConnection.setRequestProperty("Accept", "application/vnd.github.v3+json");
-            httpUrlConnection.setRequestProperty("Content-Type", "application/json");
-            httpUrlConnection.setDoOutput(true);
-
             JSONObject json = new JSONObject();
-            // validate State values
-            // Throw something otherwise maybs
-            json.put("state", state);
-            if (!description.isBlank())
-            {
+            
+            if (state == " error" || state == "failure" || state == "pending" || state == "success"){
+                json.put("state", state);
+            } else {
+                return commitStatusSet;
+            }
+            if (!description.isBlank()){
                 json.put("description", description);                
             }
-            json.put("context", "ci-server");
+            json.put("context", "ci-server");        
             
-            // oklart om vi ska ha den
-            // json.put("target_url", "http://ci-server.example.com/build/logs");
+            URI uri = new URI("https://api.github.com/repos/" + repoOwner + "/" + repoName + "/statuses/" + commitSHA);
+            URL url = uri.toURL();
+            HttpURLConnection UrlCon = (HttpURLConnection) url.openConnection();
 
-            OutputStream outputStream = httpUrlConnection.getOutputStream();
-            outputStream.write(json.toString().getBytes());
-            outputStream.flush();
-            outputStream.close();
+            UrlCon.setRequestMethod("POST");
+            UrlCon.setRequestProperty("Authorization", "Bearer " + accessToken);
+            UrlCon.setRequestProperty("Accept", "application/vnd.github.v3+json");
+            UrlCon.setRequestProperty("Content-Type", "application/json");
+            UrlCon.setDoOutput(true);
+            
+            OutputStream outStream = UrlCon.getOutputStream();
+            outStream.write(json.toString().getBytes());
+            outStream.flush();
+            outStream.close();
 
-            int responseCode = httpUrlConnection.getResponseCode();
+            int responseCode = UrlCon.getResponseCode();
 
-            if (responseCode == 201)
-            {
+            if (responseCode == 201){
                 commitStatusSet = true;
             }
         } catch (Exception e) {
@@ -160,7 +159,6 @@ public class ContinuousIntegrationServer extends AbstractHandler {
 
         return commitStatusSet;
     }
-
   
     public static boolean pullBranch(File directory, ProcessBuilder processBuilder, String branchP){
         try{

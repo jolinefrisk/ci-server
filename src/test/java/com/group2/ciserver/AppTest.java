@@ -175,13 +175,14 @@ public class AppTest {
     }
 
     @Test
-    public void successCommitStatusNotification() {   
-        String owner = "to be changed";
-        String repo = "to be changed";
+    public void successCommitStatusNotification() {
+        //https://github.com/VictoriaHellstrom/testing-repo   
+        String owner = "VictoriaHellstrom";
+        String repo = "testing-repo";
         String status = "success";
-        String commitSHA = "to be changed";
+        String commitSHA = "2406ba3bb032a9660441c1fcdbabdda895ea9b93";
         String desc = "Everything is fine";
-        String accessToken = "toBeChanged";
+        String accessToken = "ACCESS_TOKEN";
         
         boolean response = ContinuousIntegrationServer.setCommitStatus(owner, repo, commitSHA, status, desc, accessToken);
         assertTrue(response);
@@ -190,15 +191,15 @@ public class AppTest {
 
     @Test
     public void failureCommitStatusNotification() {   
-        String owner = "to be changed";
-        String repo = "to be changed";
+        String owner = "VictoriaHellstrom";
+        String repo = "testing-repo";
         String status = "failure";
-        String commitSHA = "to be changed";
+        String commitSHA = "2406ba3bb032a9660441c1fcdbabdda895ea9b93";
         String desc = "Everything is not fine";
-        String accessToken = "toBeChanged";
+        String accessToken = "ACCESS_TOKEN";
         
         boolean response = ContinuousIntegrationServer.setCommitStatus(owner, repo, commitSHA, status, desc, accessToken);
-        assertFalse(response);
+        assertTrue(response);
     }
 
     @Test
