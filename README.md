@@ -63,13 +63,28 @@ Open a browser and go to http://localhost:8080 to check if the CI server is runn
 
 ## Code logic:
 
-compileCode(): The CI server compiles the code using the command mvn clean compile in a Bash environment. It then reads the output from the process and checks if it contains the line "BUILD SUCCESS", which indicates that the compilation was successful. If the code has been compiled successfully, the method returns true; otherwise, it returns false.To test the method, three unit tests are implemented: one positive, one negative, and one with invalid input.
+**compileCode():** The CI server compiles the code using the command mvn clean compile in a Bash environment. It then reads the output from the process and checks if it contains the line "BUILD SUCCESS", which indicates that the compilation was successful. If the code has been compiled successfully, the method returns true; otherwise, it returns false.To test the method, three unit tests are implemented: one positive, one negative, and one with invalid input.
 Positive Test: Uses mocking to simulate an output containing "BUILD SUCCESS", verifying that the method returns true.
 Negative Test: Similar to the positive test, but the output does not contain "BUILD SUCCESS", ensuring that the method returns false.
 Invalid Input Test: Tests the method with an invalid directory to check how it handles incorrect input, expecting it to return false.
 
 
-runTests() covering P2: implemented by running Maven command "mvn test" with help of the Java ProcessBuilder package. After that the method checked output for signature that all tests ran were succesful. runTests() was tested with mock library and using an expected true and false test.
+**runTests() covering P2:** implemented by running Maven command "mvn test" with help of the Java ProcessBuilder package. After that the method checked output for signature that all tests ran were succesful. runTests() was tested with mock library and using an expected true and false test.
+
+**setCommitStatus() Method - P3**: implemented to update the status of a specified commit on a GitHub repository directly from the CI server. The status can be set to one of the following states: "success", "failure", "pending", or "error". The method constructs an HTTP POST request to the GitHub Commit Statuses API. A JSON payload containing the status parameters is created and written to the request body. After sending the request, the response code is checked. If the response code is 201 (Created), the method successfully updates the commit status and returns true. If the response code is not 201, it returns false. To validate the functionality, three tests were implemented:
+- Success Status Test: A commit status is set to "success", and the method checks if the commit status matches the expected success status.
+- Failure Status Test: A commit status is set to "failure", and the method verifies that the commit status matches the expected failure status.
+- Error Handling Test: A request is made to a non-existing repository to ensure the method correctly handles errors and returns false.
+
+Dependencies:
+The following dependencies are used in the implementation:
+```
+java.net.URI
+java.net.URL
+org.json.JSONObject
+java.net.HttpURLConnection
+java.io.OutputStream
+```
 
 ## Essence standard evaluation:
 Our team has previously reached the "In Use" stage of the Essence Standard Evaluation, where we had well-established practices, clear roles, and effective collaboration. However, for this project, we find ourselves at a lower stage of the Essence Ladder. We're still in the early stages of setting up our processes and tools, and while we’ve started to lay the foundation, things are less refined compared to before. We’re actively working to establish clear rules, refine our methods, and improve how we communicate and coordinate. The team is focused on figuring out the best tools and practices to move forward, and we’re committed to improving our approach so we can reach a higher level of maturity in our work.
