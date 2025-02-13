@@ -11,7 +11,7 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
-
+import java.util.concurrent.CompletableFuture;
 
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.Request;
@@ -23,7 +23,6 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 
 import java.io.File;
-
 
 /**
  * Skeleton of a ContinuousIntegrationServer which acts as webhook
@@ -38,13 +37,13 @@ public class ContinuousIntegrationServer extends AbstractHandler {
             processBuilder.directory(directory);
 
             processBuilder.command("bash", "-c", "mvn test");
-            
+
             Process process = processBuilder.start();
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 
             String line;
 
-            while((line = reader.readLine()) != null) {
+            while ((line = reader.readLine()) != null) {
                 System.out.println(line);
                 if (line.contains("Failures: 0, Errors: 0, Skipped: 0")) {
                     testsPassed = true;
@@ -52,8 +51,8 @@ public class ContinuousIntegrationServer extends AbstractHandler {
             }
             return testsPassed;
         } catch (Exception e) {
-                System.out.println(e.getMessage());
-                return testsPassed;
+            System.out.println(e.getMessage());
+            return testsPassed;
         }
     }
 
@@ -88,16 +87,11 @@ public class ContinuousIntegrationServer extends AbstractHandler {
         }
     }
 
-    public static boolean compileCode(File directory, ProcessBuilder processBuilder, Boolean bash) {
+    public static boolean compileCode(File directory, ProcessBuilder processBuilder) {
 
         try {
             processBuilder.directory(directory);
-            if (bash) {
-                processBuilder.command("bash", "-c", "mvn clean compile");
-            } else {
-                processBuilder.command("cmd.exe", "/c", "mvn clean compile");
-            }
-
+            processBuilder.command("bash", "-c", "mvn clean compile");
             Process process = processBuilder.start();
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 
@@ -117,22 +111,22 @@ public class ContinuousIntegrationServer extends AbstractHandler {
         }
     }
 
-
-    public static boolean setCommitStatus(String repoOwner, String repoName, String commitSHA, String state, String description, String accessToken) {
+    public static boolean setCommitStatus(String repoOwner, String repoName, String commitSHA, String state,
+            String description, String accessToken) {
         boolean commitStatusSet = false;
         try {
             JSONObject json = new JSONObject();
-            
-            if (state == " error" || state == "failure" || state == "pending" || state == "success"){
+
+            if (state == " error" || state == "failure" || state == "pending" || state == "success") {
                 json.put("state", state);
             } else {
                 return commitStatusSet;
             }
-            if (!description.isBlank()){
-                json.put("description", description);                
+            if (!description.isBlank()) {
+                json.put("description", description);
             }
-            json.put("context", "ci-server");        
-            
+            json.put("context", "ci-server");
+
             URI uri = new URI("https://api.github.com/repos/" + repoOwner + "/" + repoName + "/statuses/" + commitSHA);
             URL url = uri.toURL();
             HttpURLConnection UrlCon = (HttpURLConnection) url.openConnection();
@@ -142,7 +136,7 @@ public class ContinuousIntegrationServer extends AbstractHandler {
             UrlCon.setRequestProperty("Accept", "application/vnd.github.v3+json");
             UrlCon.setRequestProperty("Content-Type", "application/json");
             UrlCon.setDoOutput(true);
-            
+
             OutputStream outStream = UrlCon.getOutputStream();
             outStream.write(json.toString().getBytes());
             outStream.flush();
@@ -150,7 +144,7 @@ public class ContinuousIntegrationServer extends AbstractHandler {
 
             int responseCode = UrlCon.getResponseCode();
 
-            if (responseCode == 201){
+            if (responseCode == 201) {
                 commitStatusSet = true;
             }
         } catch (Exception e) {
@@ -159,14 +153,14 @@ public class ContinuousIntegrationServer extends AbstractHandler {
 
         return commitStatusSet;
     }
-  
-    public static boolean pullBranch(File directory, ProcessBuilder processBuilder, String branchP){
-        try{
+
+    public static boolean pullBranch(File directory, ProcessBuilder processBuilder, String branchP) {
+        try {
 
             Git git = Git.open(directory);
             String branch = git.getRepository().getBranch();
 
-            if (!branch.equals(branchP)){
+            if (!branch.equals(branchP)) {
                 try {
                     git.checkout().setName(branchP).call();
                 } catch (Exception e) {
@@ -175,17 +169,16 @@ public class ContinuousIntegrationServer extends AbstractHandler {
             }
 
             git.pull().call();
- 
-            return compileCode(directory, processBuilder, false);
-        }catch (MergeConflictException e){
-            System.out.println("merge conflict during pull: "+ e.getMessage());
+
+            return compileCode(directory, processBuilder);
+        } catch (MergeConflictException e) {
+            System.out.println("merge conflict during pull: " + e.getMessage());
             return false;
-        }catch (IOException | GitAPIException e){
+        } catch (IOException | GitAPIException e) {
             System.out.println("Error during pull: " + e.getMessage());
             return false;
         }
     }
-
 
     public void handle(String target,
             Request baseRequest,
@@ -198,8 +191,8 @@ public class ContinuousIntegrationServer extends AbstractHandler {
 
         System.out.println(target);
 
-        String accessToken = "to be changed"; 
-        if (accessToken == "to be changed"){
+        String accessToken = "to be changed";
+        if (accessToken == "to be changed") {
             System.out.println("Failed to insert access token in handle()");
         }
 
@@ -210,97 +203,86 @@ public class ContinuousIntegrationServer extends AbstractHandler {
 
         BufferedReader reader = request.getReader();
         JSONObject json = getPayload(reader);
+        CompletableFuture.runAsync(() -> processCIJob(json, accessToken));
+    }
 
-        /*if (json.has("pull_request")){
-        JSONObject pullRequest = json.getJSONObject("pull_request");
-        String repoUrl = pullRequest.getJSONObject("head").getJSONObject("repo").getString("clone_url");
-        String branch = pullRequest.getJSONObject("head").getString("ref");
-        boolean cloned = boolean cloned = cloneRepo(branch,url);*/
-        if (json.has("repository")) {
-            String owner = json.getJSONObject("repository").getJSONObject("owner").getString("name");
-            String repo = json.getJSONObject("repository").getString("name");
-            String commitSHA = json.getString("after");
+    public static void processCIJob(JSONObject json, String accessToken) {
+        try {
+            if (json.has("repository")) {
 
-            if (json.getJSONObject("repository").has("clone_url")) {
-                File dir = new File("D:\\Github\\github\\server");
-                boolean cloned = cloneRepo(json.getJSONObject("repository").getString("clone_url"),
-                        dir);
-                ProcessBuilder processBuilder = new ProcessBuilder();
-                if (cloned) {
-                    // compile the code
-                    response.getWriter().println("compiling the code");
-                    
-                    Boolean compiled = compileCode(dir, processBuilder, true);
-                    if (compiled) {
-                        response.getWriter().println("compiled!");
-                        // test the code
-                        boolean passedTests = runTests(dir, processBuilder);
+                if (json.getJSONObject("repository").has("clone_url")) {
+                    File dir = new File("D:\\Github\\github\\server");
+                    boolean cloned = cloneRepo(json.getJSONObject("repository").getString("clone_url"),
+                            dir);
+                    ProcessBuilder processBuilder = new ProcessBuilder();
+                    if (cloned) {
+                        // compile the code
+                        System.out.println("compiling the code");
 
-                        if (passedTests) {
-                            String status = "success";
-                            String desc = "All tests passed!";           
-                            System.out.println(desc);
-                            boolean setStatus = setCommitStatus( owner, repo, commitSHA, status, desc, accessToken);
-                            if (!setStatus){
-                                System.out.println("Failed to set commit status");
-                            }
-                        } else {
-                            String status = "failure";
-                            String desc = "One or more tests failed!";           
-                            System.out.println(desc);
-                            boolean setStatus = setCommitStatus( owner, repo, commitSHA, status, desc, accessToken);
-                            if (!setStatus){
-                                System.out.println("Failed to set commit status");
-                            }
-                        }
-                    } else {
-                        response.getWriter().println("not compiled!");
-                    }
-                    
-
-                } else {
-                   
-                    // pull the code from the branch that the code was pushed to
-            
-                    response.getWriter().println("Clone exists, trying pull");
-                    String branchName =json.getString("ref").replaceFirst("refs/heads/", "");
-
-                    Boolean pulled = pullBranch(dir, processBuilder, branchName);
-                    if (pulled) {
-                        Boolean compiled = compileCode(dir, processBuilder, true);
-                        // notify the status
+                        Boolean compiled = compileCode(dir, processBuilder);
                         if (compiled) {
-                            response.getWriter().println("compiled!");
+                            System.out.println("compiled!");
                             // test the code
                             boolean passedTests = runTests(dir, processBuilder);
+
                             if (passedTests) {
-                                String status = "success";
-                                String desc = "All tests passed!";           
-                                System.out.println(desc);
-                                boolean setStatus = setCommitStatus( owner, repo, commitSHA, status, desc, accessToken);
-                                if (!setStatus){
-                                    System.out.println("Failed to set commit status");
-                                }
+                                System.out.println("Passed test!");
                             } else {
-                                String status = "failure";
-                                String desc = "One or more tests failed!";           
-                                System.out.println(desc);
-                                boolean setStatus = setCommitStatus( owner, repo, commitSHA, status, desc, accessToken);
-                                if (!setStatus){
-                                    System.out.println("Failed to set commit status");
-                                }
+                                System.out.println("Failed to set commit status");
                             }
                         } else {
-                            response.getWriter().println("not compiled!");
-                        } 
-                    }   else {
-                        response.getWriter().println("Pull failed!");
+                            System.out.println("not compiled!");
+                        }
+
+                    } else {
+
+                        // pull the code from the branch that the code was pushed to
+                        String owner = json.getJSONObject("repository").getJSONObject("owner").getString("name");
+                        String repo = json.getJSONObject("repository").getString("name");
+                        String commitSHA = json.getString("after");
+                        System.out.println("Clone exists, trying pull");
+                        String branchName = json.getString("ref").replaceFirst("refs/heads/", "");
+
+                        Boolean pulled = pullBranch(dir, processBuilder, branchName);
+                        if (pulled) {
+                            Boolean compiled = compileCode(dir, processBuilder);
+                            // notify the status
+                            if (compiled) {
+                                System.out.println("compiled!");
+                                // test the code
+                                boolean passedTests = runTests(dir, processBuilder);
+                                if (passedTests) {
+                                    String status = "success";
+                                    String desc = "All tests passed!";
+                                    System.out.println(desc);
+                                    boolean setStatus = setCommitStatus(owner, repo, commitSHA, status, desc,
+                                            accessToken);
+                                    if (!setStatus) {
+                                        System.out.println("Failed to set commit status");
+                                    }
+                                } else {
+                                    String status = "failure";
+                                    String desc = "One or more tests failed!";
+                                    System.out.println(desc);
+                                    boolean setStatus = setCommitStatus(owner, repo, commitSHA, status, desc,
+                                            accessToken);
+                                    if (!setStatus) {
+                                        System.out.println("Failed to set commit status");
+                                    }
+                                }
+                            } else {
+                                System.out.println("not compiled!");
+                            }
+                        } else {
+                            System.out.println("Pull failed!");
+                        }
                     }
                 }
             }
+        } catch (Exception e) {
+            System.err.println("Error processing CI job: " + e.getMessage());
         }
-        //}
-        response.getWriter().println("CI job done");
+
     }
 
     // used to start the CI server in command line
