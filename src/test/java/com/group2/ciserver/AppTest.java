@@ -16,13 +16,11 @@ import org.json.JSONObject;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-
 import static org.mockito.Mockito.*;
 
 
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.Git;
-
 
 import org.eclipse.jgit.api.errors.GitAPIException;
 
@@ -229,7 +227,6 @@ public class AppTest {
                 accessToken);
         assertFalse(response);
     }
-    /* Helped from chatgpt to set up fake repo */
     private Git createMockGitRepo() throws Exception {
         // Create a temporary directory for the local repo
         File tempRepoDir = Files.createTempDirectory("mockRepo").toFile();
@@ -271,19 +268,16 @@ public class AppTest {
     @Test
     void testPullBranchWithMockRepo() throws Exception {
         Git mockGit = createMockGitRepo();
-        File testDir = mockGit.getRepository().getDirectory().getParentFile();
+        File repoDir = mockGit.getRepository().getDirectory().getParentFile();
         String branchName = "test-branch";
 
         // Call the pullBranch method
-        boolean result = ContinuousIntegrationServer.pullBranch(testDir, branchName);
+        boolean result = ContinuousIntegrationServer.pullBranch(repoDir, branchName);
 
         // Verify the result
         assertTrue(result, "pullBranch should return true");
         assertEquals(branchName, mockGit.getRepository().getBranch(), "Should be on the test branch");
     }
-
-
-
 }
 
 

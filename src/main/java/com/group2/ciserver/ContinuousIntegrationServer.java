@@ -215,7 +215,7 @@ public class ContinuousIntegrationServer extends AbstractHandler {
      * @see Git#pull()
      * @see #compileCode(File, ProcessBuilder)
      */
-    public static boolean pullBranch(File directory,  String branchP) {
+    public static boolean pullBranch(File directory, String branchP) {
         try {
 
             Git git = Git.open(directory);
@@ -230,10 +230,10 @@ public class ContinuousIntegrationServer extends AbstractHandler {
             }
 
             git.pull().call();
+
             return true;
- 
-        }catch (MergeConflictException e){
-            System.out.println("merge conflict during pull: "+ e.getMessage());
+        } catch (MergeConflictException e) {
+            System.out.println("merge conflict during pull: " + e.getMessage());
             return false;
         } catch (IOException | GitAPIException e) {
             System.out.println("Error during pull: " + e.getMessage());
