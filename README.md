@@ -14,7 +14,7 @@ cd ci-server
 ```
 
 
-Before running the server, ensure all dependencies are installed:
+Before running the server, ensure all dependencies are installed
 
 * Apache Maven 3.9.9
 [Installation guide for Maven](https://maven.apache.org/install.html)
