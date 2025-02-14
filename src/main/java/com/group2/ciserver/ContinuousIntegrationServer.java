@@ -25,20 +25,23 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 import java.io.File;
 
 /**
- * This class represents a Continuous Integration (CI) server which acts as webhook.
+ * This class represents a Continuous Integration (CI) server which acts as
+ * webhook.
  * See the Jetty documentation for API documentation of those classes.
  */
 public class ContinuousIntegrationServer extends AbstractHandler {
 
     /**
-    * Runs the tests for the CI server. This is accomplished by executing tests in a Maven environment
-    * via command line through the ProcessBuilder class and checking if all tests pass.
-    *
-    * @param directory         the directory containing the Maven environment
-    * @param processBuilder    the process builder instance that runs commands
-    * @return                  true if all tests are succesful
-    * @see ProcessBuilder 
-    */
+     * Runs the tests for the CI server. This is accomplished by executing tests in
+     * a Maven environment
+     * via command line through the ProcessBuilder class and checking if all tests
+     * pass.
+     *
+     * @param directory      the directory containing the Maven environment
+     * @param processBuilder the process builder instance that runs commands
+     * @return true if all tests are succesful
+     * @see ProcessBuilder
+     */
     public static boolean runTests(File directory, ProcessBuilder processBuilder) {
         boolean testsPassed = false;
 
@@ -66,12 +69,12 @@ public class ContinuousIntegrationServer extends AbstractHandler {
     }
 
     /**
-    * Get payload from request and returns it in the form of a JSONObject.
-    * 
-    * @param reader    BufferedReader containing the payload.
-    * @return          payload data as a JSONObject
-    * @see JSONObject
-    */
+     * Get payload from request and returns it in the form of a JSONObject.
+     * 
+     * @param reader BufferedReader containing the payload.
+     * @return payload data as a JSONObject
+     * @see JSONObject
+     */
     public static JSONObject getPayload(BufferedReader reader) {
         StringBuilder jsonData = new StringBuilder();
         String line;
@@ -89,12 +92,13 @@ public class ContinuousIntegrationServer extends AbstractHandler {
     }
 
     /**
-     * Clones a Git repository into the specified directory. This is accomplished 
-     * using JGit's cloneRepository() method to retrieve the repository from the given URL.
+     * Clones a Git repository into the specified directory. This is accomplished
+     * using JGit's cloneRepository() method to retrieve the repository from the
+     * given URL.
      *
-     * @param url        the URL of the Git repository to be cloned
-     * @param directory  the directory where the repository should be cloned
-     * @return           true if the cloning was successful, false otherwise
+     * @param url       the URL of the Git repository to be cloned
+     * @param directory the directory where the repository should be cloned
+     * @return true if the cloning was successful, false otherwise
      * @see org.eclipse.jgit.api.Git#cloneRepository()
      */
     public static boolean cloneRepo(String url, File directory) {
@@ -113,13 +117,16 @@ public class ContinuousIntegrationServer extends AbstractHandler {
     }
 
     /**
-     * Compiles the source code in the specified directory using Maven. 
-     * This is accomplished by executing the "mvn clean compile" command in a Bash enviroment
+     * Compiles the source code in the specified directory using Maven.
+     * This is accomplished by executing the "mvn clean compile" command in a Bash
+     * enviroment
      * via the ProcessBuilder class and checking if the build is successful.
      *
-     * @param directory        the directory containing the Maven project to be compiled
-     * @param processBuilder   the process builder instance that runs the compilation command
-     * @return                 true if the compilation is successful, false otherwise
+     * @param directory      the directory containing the Maven project to be
+     *                       compiled
+     * @param processBuilder the process builder instance that runs the compilation
+     *                       command
+     * @return true if the compilation is successful, false otherwise
      * @see ProcessBuilder
      */
     public static boolean compileCode(File directory, ProcessBuilder processBuilder) {
@@ -151,14 +158,17 @@ public class ContinuousIntegrationServer extends AbstractHandler {
      * This method sends a POST request to the repository's commit status endpoint
      * with the specified state and description.
      *
-     * @param repoOwner    the owner of the GitHub repository
-     * @param repoName     the name of the GitHub repository
-     * @param commitSHA    the SHA hash of the commit to update
-     * @param state        the status to set for the commit (must be "error", "failure", "pending", or "success")
-     * @param description  a brief description of the commit status
-     * @param accessToken  a GitHub personal access token with repo permissions
-     * @return             true if the status update is successful, false otherwise
-     * @see <a href="https://docs.github.com/en/rest/commits/statuses?apiVersion=2022-11-28">GitHub Commit Status API</a>
+     * @param repoOwner   the owner of the GitHub repository
+     * @param repoName    the name of the GitHub repository
+     * @param commitSHA   the SHA hash of the commit to update
+     * @param state       the status to set for the commit (must be "error",
+     *                    "failure", "pending", or "success")
+     * @param description a brief description of the commit status
+     * @param accessToken a GitHub personal access token with repo permissions
+     * @return true if the status update is successful, false otherwise
+     * @see <a href=
+     *      "https://docs.github.com/en/rest/commits/statuses?apiVersion=2022-11-28">GitHub
+     *      Commit Status API</a>
      */
     public static boolean setCommitStatus(String repoOwner, String repoName, String commitSHA, String state,
             String description, String accessToken) {
@@ -205,15 +215,15 @@ public class ContinuousIntegrationServer extends AbstractHandler {
 
     /**
      * Pulls the latest changes from the specified branch of a Git repository.
-     * If the branch does not exist locally, it attempts to create and track it from the remote repository.
-     * After pulling, it compiles the code using Maven.
+     * If the branch does not exist locally, it attempts to create and track it from
+     * the remote repository.
+     * After pulling, it returns true.
      *
-     * @param directory       the directory containing the Git repository
-     * @param processBuilder  the process builder instance used for compilation
-     * @param branchP         the name of the branch to pull
-     * @return                true if the pull and compilation are successful, false otherwise
+     * @param directory      the directory containing the Git repository
+     * @param processBuilder the process builder instance used for compilation
+     * @param branchP        the name of the branch to pull
+     * @return true if the pull and compilation are successful, false otherwise
      * @see Git#pull()
-     * @see #compileCode(File, ProcessBuilder)
      */
     public static boolean pullBranch(File directory, String branchP) {
         try {
@@ -242,15 +252,19 @@ public class ContinuousIntegrationServer extends AbstractHandler {
     }
 
     /**
-     * Handles incoming HTTP requests for the CI server. This method processes webhook payloads,
-     * sets response headers, and asynchronously executes continuous integration tasks.
-     * The CI tasks may include cloning the repository, compiling the code, and running tests.
+     * Handles incoming HTTP requests for the CI server. This method processes
+     * webhook payloads,
+     * sets response headers, and asynchronously executes continuous integration
+     * tasks.
+     * The CI tasks may include cloning the repository, compiling the code, and
+     * running tests.
      *
-     * @param target       the request target (URL path)
-     * @param baseRequest  the original Jetty request
-     * @param request      the HTTP servlet request containing the webhook payload
-     * @param response     the HTTP servlet response
-     * @throws IOException      if an input or output error occurs while handling the request
+     * @param target      the request target (URL path)
+     * @param baseRequest the original Jetty request
+     * @param request     the HTTP servlet request containing the webhook payload
+     * @param response    the HTTP servlet response
+     * @throws IOException      if an input or output error occurs while handling
+     *                          the request
      * @throws ServletException if the request could not be handled
      * @see #processCIJob(JSONObject, String)
      */
@@ -270,11 +284,6 @@ public class ContinuousIntegrationServer extends AbstractHandler {
             System.out.println("Failed to insert access token in handle()");
         }
 
-        // here you do all the continuous integration tasks
-        // for example
-        // 1st clone your repository
-        // 2nd compile the code
-
         BufferedReader reader = request.getReader();
         JSONObject json = getPayload(reader);
         CompletableFuture.runAsync(() -> processCIJob(json, accessToken));
@@ -284,15 +293,18 @@ public class ContinuousIntegrationServer extends AbstractHandler {
      * Processes a continuous integration (CI) job based on the webhook payload.
      * This method performs the following steps:
      * <ol>
-     *   <li>Clones the repository if it does not already exist.</li>
-     *   <li>If cloning fails, attempts to pull the latest changes from the pushed branch.</li>
-     *   <li>Compiles the code using Maven.</li>
-     *   <li>Runs the test suite if compilation is successful.</li>
-     *   <li>Updates the commit status on GitHub based on the results.</li>
+     * <li>Clones the repository if it does not already exist.</li>
+     * <li>If cloning fails, attempts to pull the latest changes from the pushed
+     * branch.</li>
+     * <li>Compiles the code using Maven.</li>
+     * <li>Runs the test suite if compilation is successful.</li>
+     * <li>Updates the commit status on GitHub based on the results.</li>
      * </ol>
      *
-     * @param json         the JSON payload received from the webhook, containing repository and commit details
-     * @param accessToken  the GitHub access token used for authentication in API requests
+     * @param json        the JSON payload received from the webhook, containing
+     *                    repository and commit details
+     * @param accessToken the GitHub access token used for authentication in API
+     *                    requests
      * @see #cloneRepo(String, File)
      * @see #pullBranch(File, ProcessBuilder, String)
      * @see #compileCode(File, ProcessBuilder)
@@ -388,7 +400,8 @@ public class ContinuousIntegrationServer extends AbstractHandler {
 
     /**
      * The entry point for starting the Continuous Integration (CI) server.
-     * This method initializes a Jetty server on port 8080, sets the request handler,
+     * This method initializes a Jetty server on port 8080, sets the request
+     * handler,
      * and starts the server to listen for incoming webhook events.
      *
      * @param args command-line arguments
