@@ -1,5 +1,6 @@
 package com.group2.ciserver;
 
+
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -7,8 +8,9 @@ import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.StringReader;
 import java.io.File;
+
 import java.io.InputStream;
-import java.io.InputStreamReader;
+
 
 import org.json.JSONObject;
 
@@ -16,12 +18,20 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
+
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.Git;
+
 import org.eclipse.jgit.api.errors.GitAPIException;
-import org.junit.jupiter.api.Test;
+
+import org.eclipse.jgit.transport.RefSpec;
+import org.eclipse.jgit.transport.URIish;
+
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
+
+import java.nio.file.Files;
+
 
 /**
  * Unit test for simple App.
@@ -217,5 +227,67 @@ public class AppTest {
                 accessToken);
         assertFalse(response);
     }
+    private Git createMockGitRepo() throws Exception {
+        // Create a temporary directory for the local repo
+        File tempRepoDir = Files.createTempDirectory("mockRepo").toFile();
+        Git git = Git.init().setDirectory(tempRepoDir).call();
+    
+        // Create a temporary directory for the remote repo
+        File remoteRepoDir = Files.createTempDirectory("mockRemoteRepo").toFile();
+        Git remoteGit = Git.init().setDirectory(remoteRepoDir).call();
+    
+        // Create an initial commit in the remote repo
+        remoteGit.commit().setMessage("Initial commit in remote").setAllowEmpty(true).call();
+    
+        // Create a test branch in the remote
+        String branchName = "test-branch";
+        remoteGit.checkout().setCreateBranch(true).setName(branchName).call();
+        remoteGit.commit().setMessage("Commit on test branch").setAllowEmpty(true).call();
+    
+        // Push the test branch using the remote's URI instead of "origin"
+        URIish remoteUri = new URIish(remoteRepoDir.toURI().toString());
+        remoteGit.push()
+                .setRemote(remoteUri.toString())
+                .setRefSpecs(new RefSpec("refs/heads/" + branchName + ":refs/heads/" + branchName))
+                .call();
+    
+        // Add the remote to the local repo
+        git.remoteAdd().setName("origin").setUri(remoteUri).call();
+    
+        // Fetch and track the remote test branch
+        git.fetch().setRemote("origin").call();
+        git.checkout().setCreateBranch(true).setName(branchName).setStartPoint("origin/" + branchName).call();
+    
+        return git;
+    }
+    
+    
+    
 
+
+    @Test
+    void testPullBranchWithMockRepo() throws Exception {
+        Git mockGit = createMockGitRepo();
+        File repoDir = mockGit.getRepository().getDirectory().getParentFile();
+        String branchName = "test-branch";
+
+        // Call the pullBranch method
+        boolean result = ContinuousIntegrationServer.pullBranch(repoDir, branchName);
+
+        // Verify the result
+        assertTrue(result, "pullBranch should return true");
+        assertEquals(branchName, mockGit.getRepository().getBranch(), "Should be on the test branch");
+    }
 }
+
+
+    
+   
+
+
+
+ 
+   
+
+
+
