@@ -215,7 +215,7 @@ public class ContinuousIntegrationServer extends AbstractHandler {
      * @see Git#pull()
      * @see #compileCode(File, ProcessBuilder)
      */
-    public static boolean pullBranch(File directory, ProcessBuilder processBuilder, String branchP) {
+    public static boolean pullBranch(File directory, String branchP) {
         try {
 
             Git git = Git.open(directory);
@@ -231,7 +231,7 @@ public class ContinuousIntegrationServer extends AbstractHandler {
 
             git.pull().call();
 
-            return compileCode(directory, processBuilder);
+            return true;
         } catch (MergeConflictException e) {
             System.out.println("merge conflict during pull: " + e.getMessage());
             return false;
@@ -336,8 +336,8 @@ public class ContinuousIntegrationServer extends AbstractHandler {
                         System.out.println("Clone exists, trying pull");
                         String branchName = json.getString("ref").replaceFirst("refs/heads/", "");
 
-                        Boolean pulled = pullBranch(dir, processBuilder, branchName);
-                        if (pulled) {
+                       
+                        if (pullBranch(dir, branchName)) {
                             Boolean compiled = compileCode(dir, processBuilder);
                             // notify the status
                             if (compiled) {
