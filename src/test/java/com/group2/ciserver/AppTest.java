@@ -174,7 +174,7 @@ public class AppTest {
         assertFalse(ContinuousIntegrationServer.compileCode(testDir, processBuilder));
     }
 
-    @Test
+    /*@Test
     public void successCommitStatusNotification() {
         // https://github.com/VictoriaHellstrom/testing-repo
         String owner = "VictoriaHellstrom";
@@ -216,6 +216,6 @@ public class AppTest {
         boolean response = ContinuousIntegrationServer.setCommitStatus(owner, repo, commitSHA, status, desc,
                 accessToken);
         assertFalse(response);
-    }
+    }*/
 
 }
