@@ -166,7 +166,7 @@ public class ContinuousIntegrationServer extends AbstractHandler {
         try {
             JSONObject json = new JSONObject();
 
-            if (state == " error" || state == "failure" || state == "pending" || state == "success") {
+            if (state == "error" || state == "failure" || state == "pending" || state == "success") {
                 json.put("state", state);
             } else {
                 return commitStatusSet;
