@@ -13,6 +13,7 @@ import java.net.URI;
 import java.net.URL;
 import java.util.concurrent.CompletableFuture;
 
+
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
@@ -21,6 +22,7 @@ import org.json.JSONObject;
 import org.openl.rules.repository.git.MergeConflictException;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.RefNotFoundException;
 
 import java.io.File;
 
@@ -226,30 +228,56 @@ public class ContinuousIntegrationServer extends AbstractHandler {
      * @see Git#pull()
      */
     public static boolean pullBranch(File directory, String branchP) {
-        try {
-
-            Git git = Git.open(directory);
-            String branch = git.getRepository().getBranch();
-
-            if (!branch.equals(branchP)) {
-                try {
-                    git.checkout().setName(branchP).call();
-                } catch (Exception e) {
-                    git.checkout().setCreateBranch(true).setName(branchP).setStartPoint("origin/" + branchP).call();
-                }
-            }
-
-            git.pull().call();
-
-            return true;
-        } catch (MergeConflictException e) {
-            System.out.println("merge conflict during pull: " + e.getMessage());
-            return false;
-        } catch (IOException | GitAPIException e) {
-            System.out.println("Error during pull: " + e.getMessage());
+        if (branchP == null || branchP.isEmpty()) {
+            System.out.println("Invalid branch name.");
             return false;
         }
+        
+            try(Git git = Git.open(directory);) {     
+                String branch = git.getRepository().getBranch();
+                git.fetch()
+                .setRemote("origin")
+                .call();
+    
+                boolean branchExists = git.lsRemote()
+                .setRemote("origin")
+                .call()
+                .stream()
+                .anyMatch(ref -> ref.getName().equals("refs/heads/" + branchP));
+    
+                if (!branchExists) {
+                    System.out.println("Remote branch does not exist: " + branchP);
+                    return false;
+                }
+    
+                if (!branch.equals(branchP)) {
+                    try {
+                        git.checkout()
+                        .setName(branchP)
+                        .call();
+                    } catch (RefNotFoundException e) {
+                        git.checkout()
+                        .setCreateBranch(true)
+                        .setName(branchP)
+                        .setStartPoint("origin/" + branchP)
+                        .call();
+                        System.out.println("Checked out new branch: " + branchP);
+                    }
+                }
+    
+                git.pull().call();
+                System.out.println("Pulled latest changes into branch: " + branchP);
+                return true;
+            } catch (MergeConflictException e) {
+                System.out.println("merge conflict during pull: " + e.getMessage());
+    
+            } catch (IOException | GitAPIException e) {
+                System.out.println("Error during pull: " + e.getMessage());
+    
+            }
+            return false;
     }
+
 
     /**
      * Handles incoming HTTP requests for the CI server. This method processes
