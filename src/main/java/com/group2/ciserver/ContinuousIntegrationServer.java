@@ -13,6 +13,7 @@ import java.net.URI;
 import java.net.URL;
 import java.util.concurrent.CompletableFuture;
 
+
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
@@ -21,6 +22,7 @@ import org.json.JSONObject;
 import org.openl.rules.repository.git.MergeConflictException;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.RefNotFoundException;
 
 import java.io.File;
 
@@ -226,31 +228,65 @@ public class ContinuousIntegrationServer extends AbstractHandler {
      * @see Git#pull()
      */
     public static boolean pullBranch(File directory, String branchP) {
-        try {
-
-            Git git = Git.open(directory);
-            String branch = git.getRepository().getBranch();
-
-            if (!branch.equals(branchP)) {
-                try {
-                    git.checkout().setName(branchP).call();
-                } catch (Exception e) {
-                    git.checkout().setCreateBranch(true).setName(branchP).setStartPoint("origin/" + branchP).call();
-                }
-            }
-
-            git.pull().call();
-
-            return true;
-        } catch (MergeConflictException e) {
-            System.out.println("merge conflict during pull: " + e.getMessage());
-            return false;
-        } catch (IOException | GitAPIException e) {
-            System.out.println("Error during pull: " + e.getMessage());
+        if (branchP == null || branchP.isEmpty()) {
+            System.out.println("Invalid branch name.");
             return false;
         }
+        
+            try(Git git = Git.open(directory);) {     
+                String branch = git.getRepository().getBranch();
+                git.fetch()
+                .setRemote("origin")
+                .call();
+    
+                boolean branchExists = git.lsRemote()
+                .setRemote("origin")
+                .call()
+                .stream()
+                .anyMatch(ref -> ref.getName().equals("refs/heads/" + branchP));
+    
+                if (!branchExists) {
+                    System.out.println("Remote branch does not exist: " + branchP);
+                    return false;
+                }
+    
+                if (!branch.equals(branchP)) {
+                    try {
+                        git.checkout()
+                        .setName(branchP)
+                        .call();
+                    } catch (RefNotFoundException e) {
+                        git.checkout()
+                        .setCreateBranch(true)
+                        .setName(branchP)
+                        .setStartPoint("origin/" + branchP)
+                        .call();
+                        System.out.println("Checked out new branch: " + branchP);
+                    }
+                }
+    
+                git.pull().call();
+                System.out.println("Pulled latest changes into branch: " + branchP);
+                return true;
+            } catch (MergeConflictException e) {
+                System.out.println("merge conflict during pull: " + e.getMessage());
+    
+            } catch (IOException | GitAPIException e) {
+                System.out.println("Error during pull: " + e.getMessage());
+    
+            }
+            return false;
     }
 
+    public static String getRepoName(String repoUrl) {
+        // Remove trailing ".git" if it exists
+        if (repoUrl.endsWith(".git")) {
+            repoUrl = repoUrl.substring(0, repoUrl.length() - 4);
+        }
+    
+        // Extract the repository name after the last '/'
+        return repoUrl.substring(repoUrl.lastIndexOf('/') + 1);
+    }
     /**
      * Handles incoming HTTP requests for the CI server. This method processes
      * webhook payloads,
@@ -316,7 +352,10 @@ public class ContinuousIntegrationServer extends AbstractHandler {
             if (json.has("repository")) {
 
                 if (json.getJSONObject("repository").has("clone_url")) {
-                    File dir = new File("D:\\Github\\github\\server");
+                    String repoUrl = json.getJSONObject("repository").getString("clone_url");
+                    String repoName = getRepoName(repoUrl);
+                    File dir = new File(System.getProperty("user.home") + "/Github/"+ repoName);
+                    System.out.println("Cloning from: " + repoUrl);
                     boolean cloned = cloneRepo(json.getJSONObject("repository").getString("clone_url"),
                             dir);
                     ProcessBuilder processBuilder = new ProcessBuilder();
@@ -363,7 +402,7 @@ public class ContinuousIntegrationServer extends AbstractHandler {
                                     boolean setStatus = setCommitStatus(owner, repo, commitSHA, status, desc,
                                             accessToken);
                                     if (!setStatus) {
-                                        System.out.println("Failed to set commit status");
+                                        System.out.println("Test Success butFailed to set commit status");
                                     }
                                 } else {
                                     String status = "failure";

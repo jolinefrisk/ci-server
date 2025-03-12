@@ -14,3 +14,5 @@ Thumbs.db
 /.vscode
 ngrok-v3-stable-linux-amd64.tgz
 apache-maven-3.9.6-bin.tar.gz
+*.jar
+*.jar
