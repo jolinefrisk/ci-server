@@ -278,7 +278,15 @@ public class ContinuousIntegrationServer extends AbstractHandler {
             return false;
     }
 
-
+    public static String getRepoName(String repoUrl) {
+        // Remove trailing ".git" if it exists
+        if (repoUrl.endsWith(".git")) {
+            repoUrl = repoUrl.substring(0, repoUrl.length() - 4);
+        }
+    
+        // Extract the repository name after the last '/'
+        return repoUrl.substring(repoUrl.lastIndexOf('/') + 1);
+    }
     /**
      * Handles incoming HTTP requests for the CI server. This method processes
      * webhook payloads,
@@ -344,7 +352,10 @@ public class ContinuousIntegrationServer extends AbstractHandler {
             if (json.has("repository")) {
 
                 if (json.getJSONObject("repository").has("clone_url")) {
-                    File dir = new File("D:\\Github\\github\\server");
+                    String repoUrl = json.getJSONObject("repository").getString("clone_url");
+                    String repoName = getRepoName(repoUrl);
+                    File dir = new File(System.getProperty("user.home") + "/Github/test-repo");
+                    System.out.println("Cloning from: " + repoUrl);
                     boolean cloned = cloneRepo(json.getJSONObject("repository").getString("clone_url"),
                             dir);
                     ProcessBuilder processBuilder = new ProcessBuilder();
@@ -391,7 +402,7 @@ public class ContinuousIntegrationServer extends AbstractHandler {
                                     boolean setStatus = setCommitStatus(owner, repo, commitSHA, status, desc,
                                             accessToken);
                                     if (!setStatus) {
-                                        System.out.println("Failed to set commit status");
+                                        System.out.println("Test Success butFailed to set commit status");
                                     }
                                 } else {
                                     String status = "failure";
