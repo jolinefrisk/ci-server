@@ -354,7 +354,7 @@ public class ContinuousIntegrationServer extends AbstractHandler {
                 if (json.getJSONObject("repository").has("clone_url")) {
                     String repoUrl = json.getJSONObject("repository").getString("clone_url");
                     String repoName = getRepoName(repoUrl);
-                    File dir = new File(System.getProperty("user.home") + "/Github/test-repo");
+                    File dir = new File(System.getProperty("user.home") + "/Github/"+ repoName);
                     System.out.println("Cloning from: " + repoUrl);
                     boolean cloned = cloneRepo(json.getJSONObject("repository").getString("clone_url"),
                             dir);
